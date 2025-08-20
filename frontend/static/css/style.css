@@ -1,0 +1,132 @@
+/* Base Styles */
+body {
+  font-family: 'Inter', sans-serif;
+  color: #333;
+  line-height: 1.6;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* Hero Section */
+.gradient-bg {
+  background: linear-gradient(135deg, #6B46C1 0%, #4299E1 100%);
+  color: white;
+  padding: 80px 0;
+  text-align: center;
+}
+
+.badge {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 8px 16px;
+  border-radius: 9999px;
+  margin-bottom: 24px;
+  font-size: 14px;
+}
+
+h1 {
+  font-size: 3.5rem;
+  font-weight: 800;
+  margin-bottom: 24px;
+  line-height: 1.2;
+}
+
+.highlight {
+  color: #F6E05E;
+}
+
+.subtitle {
+  font-size: 1.5rem;
+  max-width: 800px;
+  margin: 0 auto 40px;
+  opacity: 0.9;
+}
+
+/* Buttons */
+.btn-primary {
+  background: white;
+  color: #6B46C1;
+  padding: 16px 32px;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  background: #f1f1f1;
+  transform: translateY(-2px);
+}
+
+.btn-secondary {
+  border: 2px solid white;
+  color: white;
+  padding: 16px 32px;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+  background: white;
+  color: #6B46C1;
+}
+
+/* Stats Grid */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  max-width: 800px;
+  margin: 60px auto 0;
+}
+
+.stat-value {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #F6E05E;
+  margin-bottom: 8px;
+}
+
+/* Features Section */
+#features {
+  padding: 80px 0;
+  background: white;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+  margin-top: 40px;
+}
+
+.feature-card {
+  padding: 32px;
+  border-radius: 12px;
+  border: 1px solid #E2E8F0;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+/* About Section */
+#about {
+  padding: 80px 0;
+  background: #F7FAFC;
+}
+
+/* Footer */
+#footer {
+  background: #2D3748;
+  color: white;
+  padding: 60px 0 30px;
+}
+
+/* Add all other necessary styles */

@@ -17,3 +17,4 @@ def dashboard(request):
         'total_lessons': 10
     }
     return render(request, 'dashboard.html', context)
+

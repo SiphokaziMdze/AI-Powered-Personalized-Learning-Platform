@@ -1,3 +1,6 @@
-from django.shortcuts import render
+# from django.shortcuts import render
+# backend/learning/views.py
+from django.http import JsonResponse
 
-# Create your views here.
+def ping(request):
+    return JsonResponse({"ok": True, "app": "learning"})

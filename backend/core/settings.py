@@ -28,10 +28,12 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+CSRF_TRUSTED_ORIGINS = ["http://127.0.0.1", "http://localhost"]
+
 # Application definition
 INSTALLED_APPS = [
-    'frontend',  # ✅ ADDED MISSING COMMA HERE
-    'learning',  # ✅ ADD YOUR LEARNING APP
+    'frontend',  
+    'learning',  
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -56,7 +58,7 @@ ROOT_URLCONF = 'core.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'frontend/templates'],  # ✅ ADD THIS LINE
+        'DIRS': [BASE_DIR / 'frontend' / 'templates'],  # ✅ ADD THIS LINE
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -101,10 +103,10 @@ USE_I18N = True
 USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
-STATIC_URL = 'static/'
-# ✅ ADD STATIC FILES DIRECTORIES
+STATIC_URL = '/static/'
+# STATIC FILES DIRECTORIES
 STATICFILES_DIRS = [
-    BASE_DIR / "frontend/static",  # Your CSS/JS files
+    BASE_DIR / "frontend" / "static",  # CSS/JS files
 ]
 
 # Default primary key field type

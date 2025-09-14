@@ -28,7 +28,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-CSRF_TRUSTED_ORIGINS = ["http://127.0.0.1", "http://localhost"]
+# CSRF_TRUSTED_ORIGINS = ["http://127.0.0.1", "http://localhost"]
 
 # Application definition
 INSTALLED_APPS = [
@@ -58,7 +58,7 @@ ROOT_URLCONF = 'core.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'frontend' / 'templates'],  # ✅ ADD THIS LINE
+        "DIRS": [BASE_DIR.parent / "frontend" / "templates"],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -106,7 +106,7 @@ USE_TZ = True
 STATIC_URL = '/static/'
 # STATIC FILES DIRECTORIES
 STATICFILES_DIRS = [
-    BASE_DIR / "frontend" / "static",  # CSS/JS files
+    BASE_DIR.parent / "frontend" / "static",  # CSS/JS files
 ]
 
 # Default primary key field type

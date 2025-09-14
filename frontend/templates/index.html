@@ -1,10 +1,13 @@
+{% load static %}
+{% load tz %} 
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI-Powered Learning Platform</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body>
@@ -40,8 +43,122 @@
           </div>
     </section>
 
-    
-    
+<!-- ========== FEATURES ========== -->
+  <section id="features" class="section section-features">
+    <div class="container">
+      <h2 class="section-title">Why Choose OS2 Learn?</h2>
+      <p class="section-subtitle">Built for second-year Operating Systems students — fast, simple, and helpful.</p>
+
+      <div class="features-grid">
+        <article class="feature-card">
+          <div class="feature-emoji">🤖</div>
+          <h3>AI Recommendations</h3>
+          <p>Get the next best topic based on your quiz results and pace.</p>
+        </article>
+
+        <article class="feature-card">
+          <div class="feature-emoji">🧩</div>
+          <h3>Adaptive Quizzes</h3>
+          <p>Questions adjust in difficulty as you improve on each unit.</p>
+        </article>
+
+        <article class="feature-card">
+          <div class="feature-emoji">📊</div>
+          <h3>Progress Tracking</h3>
+          <p>Simple dashboard showing completion, streaks, and weak areas.</p>
+        </article>
+
+        <article class="feature-card">
+          <div class="feature-emoji">🎥</div>
+          <h3>Short Explanations</h3>
+          <p>Concise notes and videos aligned with your OS2 module.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== TOPICS ========== -->
+  <section id="topics" class="section section-topics">
+    <div class="container">
+      <h2 class="section-title">OS2 Curriculum</h2>
+      <div class="topics-grid">
+        <div class="topic-card">
+          <h3>Process Management</h3>
+          <ul>
+            <li>Processes & Threads</li>
+            <li>CPU Scheduling</li>
+            <li>Synchronization</li>
+          </ul>
+          <button class="btn btn-sm btn-outline topic-btn" data-topic="Process Management">Revise</button>
+        </div>
+
+        <div class="topic-card">
+          <h3>Memory Management</h3>
+          <ul>
+            <li>Virtual Memory</li>
+            <li>Paging & Segmentation</li>
+            <li>Allocation Strategies</li>
+          </ul>
+          <button class="btn btn-sm btn-outline topic-btn" data-topic="Memory Management">Revise</button>
+        </div>
+
+        <div class="topic-card">
+          <h3>File Systems</h3>
+          <ul>
+            <li>FS Architecture</li>
+            <li>Directories</li>
+            <li>Disk Scheduling</li>
+          </ul>
+          <button class="btn btn-sm btn-outline topic-btn" data-topic="File Systems">Revise</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== CTA ========== -->
+  <section id="cta" class="section section-cta">
+    <div class="container cta-inner">
+      <h2>Ready to Master Operating Systems?</h2>
+      <p>Join thousands of students learning smarter with AI.</p>
+      <div>
+        <a href="{% url 'dashboard' %}" class="btn btn-lg btn-invert">Go to Dashboard</a>
+        <button class="btn btn-lg btn-ghost" id="getHelpBtn">Need Help?</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== FOOTER ========== -->
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <span class="brand-icon">🧠</span>
+        <span>OS2 Learn</span>
+      </div>
+      <nav class="footer-links">
+        <a href="#features">Features</a>
+        <a href="#topics">Curriculum</a>
+        <a href="#cta">Get Started</a>
+      </nav>
+      <p class="copy">© {{ title|default:"OS2 Learn" }} — {% now "Y" %}</p>
+    </div>
+  </footer>
+
+  <!-- ========== AUTH MODALS (simple placeholders) ========== -->
+  <div id="modalOverlay" class="modal-overlay hidden">
+    <div class="modal">
+      <header class="modal-header">
+        <h3 id="modalTitle">Welcome</h3>
+        <button id="modalClose" class="modal-close">×</button>
+      </header>
+      <div class="modal-body" id="modalBody">
+        <!-- script.js will inject a simple form -->
+      </div>
+    </div>
+  </div>
+
+  <!-- main script -->
+  <script src="{% static 'js/script.js' %}"></script>
+ 
 
 </body>
 </html>

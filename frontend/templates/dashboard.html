@@ -1,0 +1,286 @@
+{% load static tz %}{% now "Y" as year %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{{ title|default:"Dashboard • OS2 Learn" }}</title>
+
+  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+  <style>
+    /* small guard styles so it looks OK even before your CSS loads */
+    :root{
+      --bg:#0f172a;--card:#111827;--muted:#9ca3af;--accent:#22c55e;--accent-2:#3b82f6;--warning:#ef4444;
+      --text:#e5e7eb;--text-dim:#cbd5e1;--ring:#1f2937;
+    }
+    body{background:var(--bg); color:var(--text); font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif; margin:0;}
+    .header{position:sticky; top:0; backdrop-filter:saturate(150%) blur(8px); background:rgba(15,23,42,.6); border-bottom:1px solid #1f2937;}
+    .header-container{max-width:1200px; margin:0 auto; padding:12px 20px; display:flex; align-items:center; justify-content:space-between;}
+    .brand{display:flex; align-items:center; gap:12px}
+    .brand-icon{font-size:28px}
+    .brand-text h1{font-size:18px; margin:0}
+    .brand-text p{margin:0; color:var(--muted); font-size:12px}
+    .user-info{display:flex; align-items:center; gap:14px}
+    .user-avatar{width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,#22c55e,#3b82f6); display:grid; place-items:center; font-weight:700}
+    .user-menu{position:relative}
+    .dropdown-menu{position:absolute; right:0; top:44px; background:#0b1020; border:1px solid #1f2937; border-radius:10px; display:none; min-width:160px; overflow:hidden; z-index:20}
+    .dropdown-menu a{display:block; padding:10px 12px; color:var(--text); text-decoration:none; font-size:14px}
+    .dropdown-menu a:hover{background:#111827}
+    .main-container{max-width:1200px; margin:24px auto; padding:0 20px; display:grid; gap:20px}
+    .course-header{display:flex; align-items:flex-end; justify-content:space-between; gap:18px; flex-wrap:wrap}
+    .course-info h2{margin:0}
+    .progress-summary{text-align:right}
+    .progress-value{font-size:28px; font-weight:800}
+    .progress-bar{height:10px; background:#0b1020; border:1px solid #1f2937; border-radius:999px; overflow:hidden}
+    .progress-fill{height:100%; background:linear-gradient(90deg,#22c55e,#3b82f6)}
+    .stats-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:16px}
+    .stat-card{background:var(--card); border:1px solid #1f2937; border-radius:14px; padding:14px; display:flex; gap:12px; align-items:center}
+    .stat-icon{font-size:22px}
+    .stat-number{margin:0; font-size:20px; font-weight:800}
+    .stat-label{margin:2px 0 0; color:var(--muted); font-size:12px}
+    .content-grid{display:grid; grid-template-columns:1.2fr .8fr; gap:20px}
+    .content-card{background:var(--card); border:1px solid #1f2937; border-radius:14px; padding:16px}
+    .status-badge{border:1px solid #1f2937; border-radius:999px; padding:4px 10px; font-size:12px}
+    .completed{color:#22c55e; border-color:#22c55e33}
+    .in-progress{color:#3b82f6; border-color:#3b82f633}
+    .not-started{color:#9ca3af; border-color:#9ca3af33}
+    .btn-primary,.btn-secondary,.btn-warning,.btn-small{border-radius:999px; padding:8px 14px; border:1px solid #1f2937; cursor:pointer}
+    .btn-primary{background:linear-gradient(135deg,#22c55e,#3b82f6); color:#0b1020; font-weight:700}
+    .btn-secondary{background:#0b1020; color:var(--text)}
+    .btn-warning{background:#230b0b; color:#fecaca; border-color:#7f1d1d}
+    .btn-small{background:#0b1020; color:var(--text); font-size:12px; padding:6px 10px}
+    .material-item,.assessment-item,.progress-item{display:flex; align-items:center; gap:10px; justify-content:space-between; padding:12px; border:1px dashed #1f2937; border-radius:12px; margin:10px 0}
+    .material-icon{font-size:18px}
+    .progress-header{display:flex; justify-content:space-between; margin-bottom:6px}
+    .full-width{width:100%}
+    @media (max-width:980px){.stats-grid{grid-template-columns:repeat(2,1fr)} .content-grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="header-container">
+      <div class="brand">
+        <div class="brand-icon">🧠</div>
+        <div class="brand-text">
+          <h1>OS2 Learn</h1>
+          <p>AI-Powered Learning Platform</p>
+        </div>
+      </div>
+
+      <div class="user-info">
+        {% if user.is_authenticated %}
+          <div class="user-details">
+            <p class="welcome-text">Welcome back, {{ user.first_name|default:user.username }}!</p>
+            <p class="user-level">Level {{ level|default:3 }} Learner</p>
+          </div>
+
+          <div class="user-menu" id="userMenu">
+            <div class="user-avatar" id="avatar">
+              {{ user.first_name|default:user.username|slice:":1"|upper }}{{ user.last_name|default:""|slice:":1"|upper }}
+            </div>
+            <nav class="dropdown-menu" id="dropdown">
+              <a href="{% url 'profile' %}">Profile</a>
+              <a href="{% url 'settings' %}">Settings</a>
+              <a href="{% url 'logout' %}">Logout</a>
+            </nav>
+          </div>
+        {% else %}
+          <a class="btn-secondary" href="{% url 'login' %}">Login</a>
+          <a class="btn-primary" href="{% url 'signup' %}">Sign Up</a>
+        {% endif %}
+      </div>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main class="main-container">
+    <!-- Course header -->
+    <section class="course-header">
+      <div class="course-info">
+        <h2>{{ course_title|default:"Operating Systems 2" }}</h2>
+        <p class="text-dim">{{ course_subtitle|default:"Advanced concepts in operating system design and implementation" }}</p>
+      </div>
+
+      <div class="progress-summary">
+        <div class="progress-value">{{ progress.overall_progress|default:0 }}%</div>
+        <p class="text-dim">Course Progress</p>
+        <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ progress.overall_progress|default:0 }}">
+          <div class="progress-fill" style="width: {{ progress.overall_progress|default:0 }}%"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stats -->
+    <section class="stats-grid">
+      <article class="stat-card">
+        <div class="stat-icon">📚</div>
+        <div class="stat-content">
+          <p class="stat-number">{{ progress.chapters_completed|default:0 }}</p>
+          <p class="stat-label">Notes Completed</p>
+        </div>
+      </article>
+      <article class="stat-card">
+        <div class="stat-icon">🎥</div>
+        <div class="stat-content">
+          <p class="stat-number">{{ progress.videos_watched|default:0 }}</p>
+          <p class="stat-label">Videos Watched</p>
+        </div>
+      </article>
+      <article class="stat-card">
+        <div class="stat-icon">🧩</div>
+        <div class="stat-content">
+          <p class="stat-number">{{ progress.quizzes_passed|default:0 }}</p>
+          <p class="stat-label">Quizzes Passed</p>
+        </div>
+      </article>
+      <article class="stat-card">
+        <div class="stat-icon">🏆</div>
+        <div class="stat-content">
+          <p class="stat-number">{{ progress.average_score|default:0 }}%</p>
+          <p class="stat-label">Avg Score</p>
+        </div>
+      </article>
+    </section>
+
+    <section class="content-grid">
+      <!-- Left column -->
+      <div class="left-column">
+        <div class="content-card">
+          <h3>📖 Continue Learning</h3>
+          <div class="current-topic">
+            <div class="topic-header" style="display:flex; justify-content:space-between; align-items:center;">
+              <h4>{{ current_topic.title|default:"Chapter 7: Memory Management" }}</h4>
+              <span class="status-badge in-progress">{{ current_topic.status|default:"In Progress" }}</span>
+            </div>
+            <p>{{ current_topic.summary|default:"Learn about virtual memory, paging, and segmentation techniques in modern operating systems." }}</p>
+            <div class="topic-actions" style="display:flex; gap:8px; flex-wrap:wrap;">
+              <a class="btn-primary" href="{{ current_topic.read_url|default:'#' }}">Continue Reading</a>
+              <a class="btn-secondary" href="{{ current_topic.video_url|default:'#' }}">Watch Video</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="content-card">
+          <h3>📚 Learning Materials</h3>
+          <div class="material-list">
+            {% for m in materials %}
+              <div class="material-item">
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <div class="material-icon">{{ m.icon|default:"📄" }}</div>
+                  <div class="material-content">
+                    <h4 style="margin:0">{{ m.title }}</h4>
+                    <p style="margin:2px 0 0; color:var(--muted)">{{ m.subtitle }}</p>
+                  </div>
+                </div>
+                <span class="status-badge {{ m.status_class }}">{{ m.status_label }}</span>
+              </div>
+            {% empty %}
+              <p class="text-dim">No materials yet.</p>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="content-card">
+          <h3>📊 Upcoming Assessments</h3>
+          <div class="assessment-list">
+            {% for a in assessments %}
+              <div class="assessment-item {% if a.urgent %}urgent{% endif %}">
+                <div class="assessment-content">
+                  <h4>{{ a.title }}</h4>
+                  <p class="text-dim">{{ a.description }}</p>
+                  <a class="{% if a.urgent %}btn-warning{% else %}btn-secondary{% endif %}" href="{{ a.action_url|default:'#' }}">
+                    {{ a.action_label|default:"View Details" }}
+                  </a>
+                </div>
+                <span class="due-date">{{ a.due_in }}</span>
+              </div>
+            {% empty %}
+              <p class="text-dim">No assessments scheduled.</p>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Right column -->
+      <aside class="right-column">
+        <div class="content-card">
+          <h3>🤖 AI Recommendations</h3>
+          <div class="recommendation-list">
+            {% for r in recommendations %}
+              <div class="recommendation {% if r.type == 'focus' %}focus{% elif r.type == 'next' %}next-steps{% endif %}" style="border:1px dashed #1f2937; border-radius:12px; padding:12px; margin:10px 0">
+                <h4>{{ r.heading }}</h4>
+                <p class="text-dim">{{ r.text }}</p>
+                {% if r.cta_label %}<a class="btn-small" href="{{ r.cta_url|default:'#' }}">{{ r.cta_label }}</a>{% endif %}
+              </div>
+            {% empty %}
+              <p class="text-dim">No recommendations yet.</p>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="content-card">
+          <h3>📈 Progress Tracking</h3>
+          <div class="progress-list">
+            {% for label, pct in progress.topics.items %}
+              <div class="progress-item">
+                <div class="progress-header">
+                  <span>{{ label|title|cut:"_" }}</span>
+                  <span>{{ pct|default:0 }}%</span>
+                </div>
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: {{ pct|default:0 }}%"></div>
+                </div>
+              </div>
+            {% empty %}
+              <p class="text-dim">No topic progress yet.</p>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="content-card">
+          <h3>🔥 Study Streak</h3>
+          <div class="streak-display" style="text-align:center">
+            <div class="streak-number" style="font-size:32px; font-weight:800">{{ progress.study_streak|default:0 }}</div>
+            <p class="text-dim">Days in a row</p>
+            <p class="streak-motivation">Keep it up! You’re close to a new record.</p>
+          </div>
+        </div>
+
+        <div class="content-card">
+          <h3>⚡ Quick Actions</h3>
+          <div class="action-buttons" style="display:grid; gap:8px">
+            <a class="btn-primary full-width" href="{% url 'learning:quiz_list' %}">Take Practice Quiz</a>
+            <a class="btn-secondary full-width" href="{% url 'learning:flashcards' %}">Review Flashcards</a>
+            <a class="btn-secondary full-width" href="{% url 'learning:ask_ai' %}">Ask AI Tutor</a>
+          </div>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <script>
+    // Tiny JS to toggle user dropdown and close it on outside click
+    (function () {
+      const menu = document.getElementById('userMenu');
+      if (!menu) return;
+      const avatar = document.getElementById('avatar');
+      const dropdown = document.getElementById('dropdown');
+
+      const toggle = (e) => {
+        e?.stopPropagation();
+        dropdown.style.display = (dropdown.style.display === 'block') ? 'none' : 'block';
+      };
+
+      avatar.addEventListener('click', toggle);
+      document.addEventListener('click', (e) => {
+        if (!menu.contains(e.target)) dropdown.style.display = 'none';
+      });
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') dropdown.style.display = 'none';
+      });
+    })();
+  </script>
+  <script src="{% static 'js/dashboard.js' %}"></script>
+</body>
+</html>

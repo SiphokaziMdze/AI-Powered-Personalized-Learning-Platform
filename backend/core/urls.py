@@ -29,7 +29,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("", index, name="home"),
     path("", include("frontend.urls")),      # root → frontend app
-    path("learning/", include("learning.urls")), 
+    path("", include("learning.urls")), 
 ]
 
 if settings.DEBUG:

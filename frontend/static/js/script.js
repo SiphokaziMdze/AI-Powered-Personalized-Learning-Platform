@@ -167,7 +167,7 @@ class OS2LearnApp {
     const formData = new FormData(form);
     const csrf = this.getCSRFToken();
 
-    fetch('/login/', {
+    fetch('/api/login/', {
       method: 'POST',
       body: formData,               // uses multipart/form-data
       headers: { 'X-CSRFToken': csrf, 'Accept': 'application/json' },
@@ -212,7 +212,7 @@ class OS2LearnApp {
 
     const csrf = this.getCSRFToken();
 
-    fetch('/signup/', {
+    fetch('/api/signup/', {
       method: 'POST',
       body: formData,               // uses multipart/form-data
       headers: { 'X-CSRFToken': csrf, 'Accept': 'application/json' },

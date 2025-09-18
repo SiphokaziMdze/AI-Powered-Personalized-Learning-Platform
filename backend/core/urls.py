@@ -22,13 +22,16 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from frontend.views import home_view
+from django.contrib.auth import views as auth_views
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("", home_view, name="home"),  # Landing page
     path("", include("frontend.urls")),  # Frontend app URLs
     path("learning/", include("learning.urls")),  # Learning app URLs
+    path("logout/", auth_views.LogoutView.as_view(next_page="home"), name="logout"),
 ]
+
 
 # Serve static files during development
 if settings.DEBUG:

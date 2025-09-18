@@ -108,3 +108,9 @@ def ask_ai(request):
         'message': 'AI Tutor system coming soon!'
     }
     return render(request, 'learning/ask_ai.html', context)
+
+@login_required
+def profile(request):
+    return render(request, "profile.html", {
+        "title": "My Profile",
+    })

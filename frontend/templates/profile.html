@@ -1,0 +1,56 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title|default:"Profile - OS2 Learn" }}</title>
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-container">
+            <div class="brand">
+                <div class="brand-icon">🧠</div>
+                <div class="brand-text">
+                    <h1>OS2 Learn</h1>
+                    <p>AI-Powered Learning Platform</p>
+                </div>
+            </div>
+            <div class="user-info">
+                <div class="user-details">
+                    <p class="welcome-text">{{ user.first_name }} {{ user.last_name }}</p>
+                    <p class="user-level">Student Profile</p>
+                </div>
+                <div class="user-menu">
+                    <div class="user-avatar">{{ user.first_name.0 }}{{ user.last_name.0 }}</div>
+                    <div class="dropdown-menu">
+                        <a href="{% url 'frontend:dashboard' %}">Dashboard</a>
+                        <a href="{% url 'frontend:settings' %}">Settings</a>
+                        <a href="{% url 'frontend:logout' %}">Logout</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-container">
+        <div class="content-card">
+            <h2>User Profile</h2>
+            <div style="padding: 20px;">
+                <p><strong>Name:</strong> {{ user.first_name }} {{ user.last_name }}</p>
+                <p><strong>Email:</strong> {{ user.email }}</p>
+                <p><strong>Username:</strong> {{ user.username }}</p>
+                <p><strong>Joined:</strong> {{ user.date_joined|date:"F j, Y" }}</p>
+                <p><strong>Last Login:</strong> {{ user.last_login|date:"F j, Y g:i A"|default:"Never" }}</p>
+            </div>
+            <div class="topic-actions">
+                <a href="{% url 'frontend:dashboard' %}" class="btn-primary">Back to Dashboard</a>
+                <a href="{% url 'frontend:settings' %}" class="btn-secondary">Edit Settings</a>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

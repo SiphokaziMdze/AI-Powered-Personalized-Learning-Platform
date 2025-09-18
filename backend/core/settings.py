@@ -14,6 +14,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 Django settings for core project.
 """
+#backend/core/settings.py
 
 from pathlib import Path
 

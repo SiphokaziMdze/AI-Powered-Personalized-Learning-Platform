@@ -5,9 +5,12 @@ from . import views
 app_name = "learning" 
 
 urlpatterns = [
-    path('ping/', views.ping, name='learning_ping'),
-    path('api/signup/', views.api_signup, name='api_signup'),
-    path("dashboard/", views.dashboard, name="dashboard"),
-    path('api/login/', views.api_login, name='api_login'),
-    path('logout/', views.user_logout, name='logout'),
+    # Learning-specific views
+    path('courses/', views.course_list, name='course_list'),
+    path('courses/<slug:slug>/', views.course_detail, name='course_detail'),
+    path('lessons/<int:lesson_id>/', views.lesson_detail, name='lesson_detail'),
+    path('quiz/<int:quiz_id>/', views.take_quiz, name='take_quiz'),
+    path('quiz_list/', views.quiz_list, name='quiz_list'),
+    path('flashcards/', views.flashcards, name='flashcards'),
+    path('ask_ai/', views.ask_ai, name='ask_ai'),
 ]

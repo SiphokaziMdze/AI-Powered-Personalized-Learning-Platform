@@ -1,4 +1,3 @@
-#frontend/templates/index.html
 {% load static %}
 {% load tz %} 
 
@@ -7,7 +6,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>{{ title|default:"OS2 Learn - AI-Powered Operating Systems Learning" }}</title>
+    <title>{{ title|default:"EduCore AI - Intelligent Learning Platform" }}</title>
 
     <!-- Static CSS (Django) -->
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
@@ -17,23 +16,22 @@
     <nav class="navbar">
         <div class="nav-container">
             <div class="nav-brand">
-                <div class="brand-icon">🧠</div>
+                <div class="brand-icon">🎓</div>
                 <div class="brand-text">
-                    <h1>OS2 Learn</h1>
-                    <p>AI-Powered Learning</p>
+                    <h1>EduCore AI</h1>
+                    <p>Intelligent Learning Platform</p>
                 </div>
             </div>
             <div class="nav-actions">
               {% if user.is_authenticated %}
                 <span class="nav-user">Hi, {{ user.first_name }}!</span>
-                <a class="btn-secondary" href="{% url 'dashboard' %}">Dashboard</a>
-                <a class="btn-primary" href="{% url 'logout' %}">Logout</a>
+                <a class="btn-secondary" href="{% url 'frontend:dashboard' %}">Dashboard</a>
+                <a class="btn-primary" href="{% url 'frontend:logout' %}">Logout</a>
               {% else %}
                 <button class="btn-secondary" id="loginBtn">Login</button>
                 <button class="btn-primary" id="signupBtn">Sign Up</button>
               {% endif %}
             </div>
-
         </div>
     </nav>
 
@@ -41,10 +39,10 @@
     <section class="hero">
         <div class="hero-container">
             <div class="hero-content">
-                <h1 class="hero-title">Master Operating Systems with AI-Powered Learning</h1>
+                <h1 class="hero-title">Master Computer Engineering with AI-Powered Learning</h1>
                 <p class="hero-subtitle">
-                    Experience personalized learning paths, intelligent recommendations, and comprehensive tracking for
-                    Operating Systems concepts.
+                    Experience personalized learning paths, intelligent recommendations, and adaptive content 
+                    for Operating Systems and Database Management Systems.
                 </p>
                 <div class="hero-actions">
                     <button class="btn-hero-primary" id="getStartedBtn">Get Started Free</button>
@@ -52,12 +50,12 @@
                 </div>
                 <div class="hero-stats">
                     <div class="stat">
-                        <span class="stat-number">10,000+</span>
-                        <span class="stat-label">Students</span>
+                        <span class="stat-number">2</span>
+                        <span class="stat-label">Core Subjects</span>
                     </div>
                     <div class="stat">
                         <span class="stat-number">50+</span>
-                        <span class="stat-label">Chapters</span>
+                        <span class="stat-label">Lessons</span>
                     </div>
                     <div class="stat">
                         <span class="stat-number">95%</span>
@@ -68,24 +66,24 @@
 
             <div class="hero-visual">
                 <div class="floating-card card-1">
-                    <div class="card-icon">📚</div>
+                    <div class="card-icon">💾</div>
                     <div class="card-content">
-                        <h4>Interactive Notes</h4>
-                        <p>AI-enhanced study materials</p>
+                        <h4>Operating Systems</h4>
+                        <p>Process management, memory systems</p>
                     </div>
                 </div>
                 <div class="floating-card card-2">
-                    <div class="card-icon">🎥</div>
+                    <div class="card-icon">🗄️</div>
                     <div class="card-content">
-                        <h4>Video Lectures</h4>
-                        <p>Expert-led explanations</p>
+                        <h4>Database Systems</h4>
+                        <p>SQL, normalization, transactions</p>
                     </div>
                 </div>
                 <div class="floating-card card-3">
-                    <div class="card-icon">🧩</div>
+                    <div class="card-icon">🤖</div>
                     <div class="card-content">
-                        <h4>Smart Quizzes</h4>
-                        <p>Adaptive testing system</p>
+                        <h4>AI Personalization</h4>
+                        <p>Adaptive learning experience</p>
                     </div>
                 </div>
             </div>
@@ -96,39 +94,39 @@
     <section class="features">
         <div class="features-container">
             <div class="section-header">
-                <h2>Why Choose OS2 Learn?</h2>
-                <p>Advanced features designed for modern operating systems education</p>
+                <h2>Why Choose EduCore AI?</h2>
+                <p>Advanced features designed for computer engineering education</p>
             </div>
             <div class="features-grid">
                 <div class="feature-card">
                     <div class="feature-icon">🤖</div>
                     <h3>AI-Powered Recommendations</h3>
-                    <p>Get personalized study suggestions based on your learning patterns and progress.</p>
+                    <p>Get personalized study suggestions based on your learning patterns across subjects.</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">📊</div>
-                    <h3>Progress Tracking</h3>
-                    <p>Detailed analytics and insights into your learning journey with visual progress indicators.</p>
+                    <h3>Multi-Subject Analytics</h3>
+                    <p>Track your progress across Operating Systems and Database Systems with detailed insights.</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">🎯</div>
-                    <h3>Adaptive Learning</h3>
-                    <p>Content difficulty adjusts automatically based on your performance and understanding.</p>
+                    <h3>Adaptive Learning Paths</h3>
+                    <p>Content difficulty adjusts automatically based on your performance in each subject.</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">🔥</div>
-                    <h3>Gamification</h3>
-                    <p>Stay motivated with streaks, achievements, and interactive challenges.</p>
+                    <h3>Cross-Subject Integration</h3>
+                    <p>Discover connections between OS concepts and database management principles.</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">💡</div>
-                    <h3>Interactive Simulations</h3>
-                    <p>Hands-on experience with virtual operating system components and processes.</p>
+                    <h3>Interactive Learning</h3>
+                    <p>Hands-on examples from process scheduling to query optimization.</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">👥</div>
-                    <h3>Community Support</h3>
-                    <p>Connect with peers and instructors for collaborative learning experiences.</p>
+                    <h3>Smart Study Groups</h3>
+                    <p>AI matches you with peers studying similar topics for collaborative learning.</p>
                 </div>
             </div>
         </div>
@@ -138,8 +136,8 @@
     <section class="topics">
         <div class="topics-container">
             <div class="section-header">
-                <h2>Comprehensive OS Curriculum</h2>
-                <p>Master all essential operating system concepts</p>
+                <h2>Core Computer Engineering Subjects</h2>
+                <p>Master essential concepts in systems and data management</p>
             </div>
             <div class="topics-grid">
                 <div class="topic-card">
@@ -148,17 +146,17 @@
                             <svg class="progress-ring-svg" width="80" height="80" viewBox="0 0 80 80" aria-hidden="true">
                                 <circle class="progress-ring-circle-bg" cx="40" cy="40" r="35"></circle>
                                 <circle class="progress-ring-circle" cx="40" cy="40" r="35"
-                                        style="stroke-dasharray: 220; stroke-dashoffset: 44;"></circle>
+                                        style="stroke-dasharray: 220; stroke-dashoffset: 66;"></circle>
                             </svg>
-                            <div class="progress-text">80%</div>
+                            <div class="progress-text">70%</div>
                         </div>
                     </div>
-                    <h3>Process Management</h3>
-                    <p>Learn about processes, threads, scheduling algorithms, and synchronization.</p>
+                    <h3>Operating Systems 2</h3>
+                    <p>Advanced concepts in process management, memory systems, and file operations.</p>
                     <ul>
-                        <li>Process Creation & Termination</li>
-                        <li>CPU Scheduling Algorithms</li>
-                        <li>Inter-process Communication</li>
+                        <li>Process Scheduling & Synchronization</li>
+                        <li>Virtual Memory Management</li>
+                        <li>File Systems & I/O Operations</li>
                     </ul>
                 </div>
 
@@ -168,17 +166,17 @@
                             <svg class="progress-ring-svg" width="80" height="80" viewBox="0 0 80 80" aria-hidden="true">
                                 <circle class="progress-ring-circle-bg" cx="40" cy="40" r="35"></circle>
                                 <circle class="progress-ring-circle" cx="40" cy="40" r="35"
-                                        style="stroke-dasharray: 220; stroke-dashoffset: 88;"></circle>
+                                        style="stroke-dasharray: 220; stroke-dashoffset: 110;"></circle>
                             </svg>
-                            <div class="progress-text">60%</div>
+                            <div class="progress-text">50%</div>
                         </div>
                     </div>
-                    <h3>Memory Management</h3>
-                    <p>Understand virtual memory, paging, segmentation, and memory allocation.</p>
+                    <h3>Database Systems 3</h3>
+                    <p>Advanced database concepts including normalization, transactions, and optimization.</p>
                     <ul>
-                        <li>Virtual Memory Systems</li>
-                        <li>Paging & Segmentation</li>
-                        <li>Memory Allocation Strategies</li>
+                        <li>Advanced SQL & Query Optimization</li>
+                        <li>Transaction Management & Concurrency</li>
+                        <li>Database Design & Normalization</li>
                     </ul>
                 </div>
 
@@ -188,17 +186,17 @@
                             <svg class="progress-ring-svg" width="80" height="80" viewBox="0 0 80 80" aria-hidden="true">
                                 <circle class="progress-ring-circle-bg" cx="40" cy="40" r="35"></circle>
                                 <circle class="progress-ring-circle" cx="40" cy="40" r="35"
-                                        style="stroke-dasharray: 220; stroke-dashoffset: 154;"></circle>
+                                        style="stroke-dasharray: 220; stroke-dashoffset: 22;"></circle>
                             </svg>
-                            <div class="progress-text">30%</div>
+                            <div class="progress-text">90%</div>
                         </div>
                     </div>
-                    <h3>File Systems</h3>
-                    <p>Explore file system implementation, directory structures, and storage management.</p>
+                    <h3>AI Integration</h3>
+                    <p>Intelligent learning analytics and personalized content adaptation across subjects.</p>
                     <ul>
-                        <li>File System Architecture</li>
-                        <li>Directory Management</li>
-                        <li>Disk Scheduling Algorithms</li>
+                        <li>Learning Pattern Recognition</li>
+                        <li>Adaptive Content Delivery</li>
+                        <li>Performance Prediction</li>
                     </ul>
                 </div>
             </div>
@@ -209,13 +207,13 @@
     <section class="cta">
         <div class="cta-container">
             <div class="cta-content">
-                <h2>Ready to Master Operating Systems?</h2>
-                <p>Join thousands of students who have successfully learned OS concepts with our AI-powered platform.</p>
+                <h2>Ready to Excel in Computer Engineering?</h2>
+                <p>Join students mastering Operating Systems and Database concepts with our intelligent learning platform.</p>
                 <div class="cta-actions">
                     <button class="btn-cta-primary" id="startLearningBtn">Start Learning Today</button>
                     <div class="cta-note">
-                        <span>✓ Free 14-day trial</span>
-                        <span>✓ No credit card required</span>
+                        <span>✓ Free access to both subjects</span>
+                        <span>✓ AI-powered personalization</span>
                     </div>
                 </div>
             </div>
@@ -227,35 +225,35 @@
         <div class="footer-container">
             <div class="footer-content">
                 <div class="footer-brand">
-                    <div class="brand-icon">🧠</div>
+                    <div class="brand-icon">🎓</div>
                     <div class="brand-text">
-                        <h3>OS2 Learn</h3>
-                        <p>AI-Powered Learning Platform</p>
+                        <h3>EduCore AI</h3>
+                        <p>Intelligent Learning Platform</p>
                     </div>
                 </div>
                 <div class="footer-links">
                     <div class="link-group">
-                        <h4>Platform</h4>
-                        <a href="#">Features</a>
-                        <a href="#">Pricing</a>
-                        <a href="#">API</a>
+                        <h4>Subjects</h4>
+                        <a href="#">Operating Systems</a>
+                        <a href="#">Database Systems</a>
+                        <a href="#">Course Catalog</a>
                     </div>
                     <div class="link-group">
                         <h4>Support</h4>
                         <a href="#">Help Center</a>
                         <a href="#">Contact</a>
-                        <a href="#">Community</a>
+                        <a href="#">Study Groups</a>
                     </div>
                     <div class="link-group">
-                        <h4>Company</h4>
-                        <a href="#">About</a>
-                        <a href="#">Careers</a>
+                        <h4>Platform</h4>
+                        <a href="#">Features</a>
+                        <a href="#">AI Technology</a>
                         <a href="#">Privacy</a>
                     </div>
                 </div>
             </div>
             <div class="footer-bottom">
-                <p class="copy">© {{ title|default:"OS2 Learn" }} — {% now "Y" %}</p>
+                <p class="copy">© EduCore AI — {% now "Y" %}</p>
             </div>
         </div>
     </footer>
@@ -265,7 +263,7 @@
         <!-- Login Modal -->
         <div class="modal" id="loginModal" aria-hidden="true">
             <div class="modal-header">
-                <h2>Welcome Back!</h2>
+                <h2>Welcome Back to EduCore AI!</h2>
                 <button class="modal-close" id="closeLogin" aria-label="Close login">&times;</button>
             </div>
             <form class="modal-form" id="loginForm" novalidate>
@@ -296,7 +294,7 @@
         <!-- Signup Modal -->
         <div class="modal" id="signupModal" aria-hidden="true">
             <div class="modal-header">
-                <h2>Join OS2 Learn</h2>
+                <h2>Join EduCore AI</h2>
                 <button class="modal-close" id="closeSignup" aria-label="Close signup">&times;</button>
             </div>
             <form class="modal-form" id="signupForm" novalidate>

@@ -4,56 +4,86 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>{{ title|default:"Dashboard • OS2 Learn" }}</title>
+  <title>{{ title|default:"Dashboard • EduCore AI" }}</title>
 
   <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
   <style>
-    /* small guard styles so it looks OK even before your CSS loads */
-    :root{
-      --bg:#0f172a;--card:#111827;--muted:#9ca3af;--accent:#22c55e;--accent-2:#3b82f6;--warning:#ef4444;
-      --text:#e5e7eb;--text-dim:#cbd5e1;--ring:#1f2937;
+    /* Additional styles for multi-subject dashboard */
+    .subject-selector {
+      background: var(--card);
+      border: 1px solid var(--ring);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 32px;
+      text-align: center;
     }
-    body{background:var(--bg); color:var(--text); font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif; margin:0;}
-    .header{position:sticky; top:0; backdrop-filter:saturate(150%) blur(8px); background:rgba(15,23,42,.6); border-bottom:1px solid #1f2937;}
-    .header-container{max-width:1200px; margin:0 auto; padding:12px 20px; display:flex; align-items:center; justify-content:space-between;}
-    .brand{display:flex; align-items:center; gap:12px}
-    .brand-icon{font-size:28px}
-    .brand-text h1{font-size:18px; margin:0}
-    .brand-text p{margin:0; color:var(--muted); font-size:12px}
-    .user-info{display:flex; align-items:center; gap:14px}
-    .user-avatar{width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,#22c55e,#3b82f6); display:grid; place-items:center; font-weight:700}
-    .user-menu{position:relative}
-    .dropdown-menu{position:absolute; right:0; top:44px; background:#0b1020; border:1px solid #1f2937; border-radius:10px; display:none; min-width:160px; overflow:hidden; z-index:20}
-    .dropdown-menu a{display:block; padding:10px 12px; color:var(--text); text-decoration:none; font-size:14px}
-    .dropdown-menu a:hover{background:#111827}
-    .main-container{max-width:1200px; margin:24px auto; padding:0 20px; display:grid; gap:20px}
-    .course-header{display:flex; align-items:flex-end; justify-content:space-between; gap:18px; flex-wrap:wrap}
-    .course-info h2{margin:0}
-    .progress-summary{text-align:right}
-    .progress-value{font-size:28px; font-weight:800}
-    .progress-bar{height:10px; background:#0b1020; border:1px solid #1f2937; border-radius:999px; overflow:hidden}
-    .progress-fill{height:100%; background:linear-gradient(90deg,#22c55e,#3b82f6)}
-    .stats-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:16px}
-    .stat-card{background:var(--card); border:1px solid #1f2937; border-radius:14px; padding:14px; display:flex; gap:12px; align-items:center}
-    .stat-icon{font-size:22px}
-    .stat-number{margin:0; font-size:20px; font-weight:800}
-    .stat-label{margin:2px 0 0; color:var(--muted); font-size:12px}
-    .content-grid{display:grid; grid-template-columns:1.2fr .8fr; gap:20px}
-    .content-card{background:var(--card); border:1px solid #1f2937; border-radius:14px; padding:16px}
-    .status-badge{border:1px solid #1f2937; border-radius:999px; padding:4px 10px; font-size:12px}
-    .completed{color:#22c55e; border-color:#22c55e33}
-    .in-progress{color:#3b82f6; border-color:#3b82f633}
-    .not-started{color:#9ca3af; border-color:#9ca3af33}
-    .btn-primary,.btn-secondary,.btn-warning,.btn-small{border-radius:999px; padding:8px 14px; border:1px solid #1f2937; cursor:pointer}
-    .btn-primary{background:linear-gradient(135deg,#22c55e,#3b82f6); color:#0b1020; font-weight:700}
-    .btn-secondary{background:#0b1020; color:var(--text)}
-    .btn-warning{background:#230b0b; color:#fecaca; border-color:#7f1d1d}
-    .btn-small{background:#0b1020; color:var(--text); font-size:12px; padding:6px 10px}
-    .material-item,.assessment-item,.progress-item{display:flex; align-items:center; gap:10px; justify-content:space-between; padding:12px; border:1px dashed #1f2937; border-radius:12px; margin:10px 0}
-    .material-icon{font-size:18px}
-    .progress-header{display:flex; justify-content:space-between; margin-bottom:6px}
-    .full-width{width:100%}
-    @media (max-width:980px){.stats-grid{grid-template-columns:repeat(2,1fr)} .content-grid{grid-template-columns:1fr}}
+    
+    .subject-tabs {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    
+    .subject-tab {
+      background: transparent;
+      border: 2px solid var(--ring);
+      color: var(--text);
+      padding: 12px 24px;
+      border-radius: 50px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .subject-tab.active {
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: #0b1020;
+      border-color: transparent;
+      transform: translateY(-2px);
+    }
+    
+    .subject-tab:hover:not(.active) {
+      background: var(--ring);
+      transform: translateY(-1px);
+    }
+    
+    .subject-content {
+      display: none;
+    }
+    
+    .subject-content.active {
+      display: block;
+      animation: fadeIn 0.3s ease-in;
+    }
+    
+    .subject-overview {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    
+    .overview-card {
+      background: rgba(99,102,241,0.1);
+      border: 1px solid rgba(99,102,241,0.3);
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+    }
+    
+    .overview-card h4 {
+      margin: 0 0 8px;
+      color: var(--accent);
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
   </style>
 </head>
 <body>
@@ -61,10 +91,10 @@
   <header class="header">
     <div class="header-container">
       <div class="brand">
-        <div class="brand-icon">🧠</div>
+        <div class="brand-icon">🎓</div>
         <div class="brand-text">
-          <h1>OS2 Learn</h1>
-          <p>AI-Powered Learning Platform</p>
+          <h1>EduCore AI</h1>
+          <p>Intelligent Learning Platform</p>
         </div>
       </div>
 
@@ -72,7 +102,7 @@
         {% if user.is_authenticated %}
           <div class="user-details">
             <p class="welcome-text">Welcome back, {{ user.first_name|default:user.username }}!</p>
-            <p class="user-level">Level {{ level|default:3 }} Learner</p>
+            <p class="user-level">Multi-Subject Learner</p>
           </div>
 
           <div class="user-menu" id="userMenu">
@@ -80,14 +110,15 @@
               {{ user.first_name|default:user.username|slice:":1"|upper }}{{ user.last_name|default:""|slice:":1"|upper }}
             </div>
             <nav class="dropdown-menu" id="dropdown">
-              <a href="{% url 'profile' %}">Profile</a>
-              <a href="{% url 'settings' %}">Settings</a>
-              <a href="{% url 'logout' %}">Logout</a>
+              <a href="{% url 'frontend:profile' %}">Profile</a>
+              <a href="{% url 'frontend:settings' %}">Settings</a>
+              <a href="{% url 'learning:ai_dashboard' %}">AI Analytics</a>
+              <a href="{% url 'frontend:logout' %}">Logout</a>
             </nav>
           </div>
         {% else %}
-          <a class="btn-secondary" href="{% url 'login' %}">Login</a>
-          <a class="btn-primary" href="{% url 'signup' %}">Sign Up</a>
+          <a class="btn-secondary" href="{% url 'frontend:api_login' %}">Login</a>
+          <a class="btn-primary" href="{% url 'frontend:api_signup' %}">Sign Up</a>
         {% endif %}
       </div>
     </div>
@@ -95,191 +126,465 @@
 
   <!-- Main -->
   <main class="main-container">
-    <!-- Course header -->
-    <section class="course-header">
-      <div class="course-info">
-        <h2>{{ course_title|default:"Operating Systems 2" }}</h2>
-        <p class="text-dim">{{ course_subtitle|default:"Advanced concepts in operating system design and implementation" }}</p>
+    <!-- Subject Selector -->
+    <section class="subject-selector">
+      <h2 style="margin-bottom: 16px;">Choose Your Subject</h2>
+      <p style="color: var(--muted); margin-bottom: 24px;">Select a subject to view personalized content and progress</p>
+      
+      <div class="subject-tabs">
+        <button class="subject-tab active" data-subject="os2">
+          💾 Operating Systems 2
+        </button>
+        <button class="subject-tab" data-subject="db3">
+          🗄️ Database Systems 3
+        </button>
       </div>
-
-      <div class="progress-summary">
-        <div class="progress-value">{{ progress.overall_progress|default:0 }}%</div>
-        <p class="text-dim">Course Progress</p>
-        <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ progress.overall_progress|default:0 }}">
-          <div class="progress-fill" style="width: {{ progress.overall_progress|default:0 }}%"></div>
+      
+      <div class="subject-overview">
+        <div class="overview-card">
+          <h4>Overall Progress</h4>
+          <p style="font-size: 24px; font-weight: 700; margin: 0;">{{ progress.overall_progress|default:0 }}%</p>
+        </div>
+        <div class="overview-card">
+          <h4>Subjects Active</h4>
+          <p style="font-size: 24px; font-weight: 700; margin: 0;">2</p>
+        </div>
+        <div class="overview-card">
+          <h4>Study Streak</h4>
+          <p style="font-size: 24px; font-weight: 700; margin: 0;">{{ progress.study_streak|default:0 }} days</p>
+        </div>
+        <div class="overview-card">
+          <h4>AI Recommendations</h4>
+          <p style="font-size: 24px; font-weight: 700; margin: 0;">{{ recommendations|length|default:0 }}</p>
         </div>
       </div>
     </section>
 
-    <!-- Stats -->
-    <section class="stats-grid">
-      <article class="stat-card">
-        <div class="stat-icon">📚</div>
-        <div class="stat-content">
-          <p class="stat-number">{{ progress.chapters_completed|default:0 }}</p>
-          <p class="stat-label">Notes Completed</p>
+    <!-- Operating Systems 2 Content -->
+    <div class="subject-content active" id="os2-content">
+      <!-- Course header -->
+      <section class="course-header">
+        <div class="course-info">
+          <h2>💾 Operating Systems 2</h2>
+          <p class="text-dim">Advanced concepts in operating system design and implementation</p>
         </div>
-      </article>
-      <article class="stat-card">
-        <div class="stat-icon">🎥</div>
-        <div class="stat-content">
-          <p class="stat-number">{{ progress.videos_watched|default:0 }}</p>
-          <p class="stat-label">Videos Watched</p>
-        </div>
-      </article>
-      <article class="stat-card">
-        <div class="stat-icon">🧩</div>
-        <div class="stat-content">
-          <p class="stat-number">{{ progress.quizzes_passed|default:0 }}</p>
-          <p class="stat-label">Quizzes Passed</p>
-        </div>
-      </article>
-      <article class="stat-card">
-        <div class="stat-icon">🏆</div>
-        <div class="stat-content">
-          <p class="stat-number">{{ progress.average_score|default:0 }}%</p>
-          <p class="stat-label">Avg Score</p>
-        </div>
-      </article>
-    </section>
 
-    <section class="content-grid">
-      <!-- Left column -->
-      <div class="left-column">
-        <div class="content-card">
-          <h3>📖 Continue Learning</h3>
-          <div class="current-topic">
-            <div class="topic-header" style="display:flex; justify-content:space-between; align-items:center;">
-              <h4>{{ current_topic.title|default:"Chapter 7: Memory Management" }}</h4>
-              <span class="status-badge in-progress">{{ current_topic.status|default:"In Progress" }}</span>
-            </div>
-            <p>{{ current_topic.summary|default:"Learn about virtual memory, paging, and segmentation techniques in modern operating systems." }}</p>
-            <div class="topic-actions" style="display:flex; gap:8px; flex-wrap:wrap;">
-              <a class="btn-primary" href="{{ current_topic.read_url|default:'#' }}">Continue Reading</a>
-              <a class="btn-secondary" href="{{ current_topic.video_url|default:'#' }}">Watch Video</a>
-            </div>
+        <div class="progress-summary">
+          <div class="progress-value">{{ progress.os2_progress|default:78 }}%</div>
+          <p class="text-dim">Course Progress</p>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: {{ progress.os2_progress|default:78 }}%"></div>
           </div>
         </div>
+      </section>
 
-        <div class="content-card">
-          <h3>📚 Learning Materials</h3>
-          <div class="material-list">
-            {% for m in materials %}
-              <div class="material-item">
-                <div style="display:flex; align-items:center; gap:10px;">
-                  <div class="material-icon">{{ m.icon|default:"📄" }}</div>
-                  <div class="material-content">
-                    <h4 style="margin:0">{{ m.title }}</h4>
-                    <p style="margin:2px 0 0; color:var(--muted)">{{ m.subtitle }}</p>
+      <!-- OS2 Stats -->
+      <section class="stats-grid">
+        <article class="stat-card">
+          <div class="stat-icon">📚</div>
+          <div class="stat-content">
+            <p class="stat-number">{{ progress.os2_chapters|default:12 }}</p>
+            <p class="stat-label">Chapters Completed</p>
+          </div>
+        </article>
+        <article class="stat-card">
+          <div class="stat-icon">🎥</div>
+          <div class="stat-content">
+            <p class="stat-number">{{ progress.os2_videos|default:8 }}</p>
+            <p class="stat-label">Videos Watched</p>
+          </div>
+        </article>
+        <article class="stat-card">
+          <div class="stat-icon">🧩</div>
+          <div class="stat-content">
+            <p class="stat-number">{{ progress.os2_quizzes|default:5 }}</p>
+            <p class="stat-label">Quizzes Passed</p>
+          </div>
+        </article>
+        <article class="stat-card">
+          <div class="stat-icon">🏆</div>
+          <div class="stat-content">
+            <p class="stat-number">{{ progress.os2_score|default:85 }}%</p>
+            <p class="stat-label">Average Score</p>
+          </div>
+        </article>
+      </section>
+
+      <section class="content-grid">
+        <!-- Left column -->
+        <div class="left-column">
+          <div class="content-card">
+            <h3>📖 Continue Learning - Operating Systems</h3>
+            <div class="current-topic">
+              <div class="topic-header" style="display:flex; justify-content:space-between; align-items:center;">
+                <h4>{{ os2_current_topic.title|default:"Chapter 7: Memory Management" }}</h4>
+                <span class="status-badge in-progress">{{ os2_current_topic.status|default:"In Progress" }}</span>
+              </div>
+              <p>{{ os2_current_topic.summary|default:"Learn about virtual memory, paging, and segmentation techniques in modern operating systems." }}</p>
+              <div class="topic-actions" style="display:flex; gap:8px; flex-wrap:wrap;">
+                <a class="btn-primary" href="{{ os2_current_topic.read_url|default:'/learning/lessons/1/' }}">Continue Reading</a>
+                <a class="btn-secondary" href="{{ os2_current_topic.video_url|default:'#' }}">Watch Video</a>
+              </div>
+            </div>
+          </div>
+
+          <div class="content-card">
+            <h3>📚 OS Learning Materials</h3>
+            <div class="material-list">
+              {% for m in os2_materials %}
+                <div class="material-item">
+                  <div style="display:flex; align-items:center; gap:10px;">
+                    <div class="material-icon">{{ m.icon|default:"📄" }}</div>
+                    <div class="material-content">
+                      <h4 style="margin:0">{{ m.title }}</h4>
+                      <p style="margin:2px 0 0; color:var(--muted)">{{ m.subtitle }}</p>
+                    </div>
                   </div>
+                  <span class="status-badge {{ m.status_class }}">{{ m.status_label }}</span>
                 </div>
-                <span class="status-badge {{ m.status_class }}">{{ m.status_label }}</span>
-              </div>
-            {% empty %}
-              <p class="text-dim">No materials yet.</p>
-            {% endfor %}
-          </div>
-        </div>
-
-        <div class="content-card">
-          <h3>📊 Upcoming Assessments</h3>
-          <div class="assessment-list">
-            {% for a in assessments %}
-              <div class="assessment-item {% if a.urgent %}urgent{% endif %}">
-                <div class="assessment-content">
-                  <h4>{{ a.title }}</h4>
-                  <p class="text-dim">{{ a.description }}</p>
-                  <a class="{% if a.urgent %}btn-warning{% else %}btn-secondary{% endif %}" href="{{ a.action_url|default:'#' }}">
-                    {{ a.action_label|default:"View Details" }}
-                  </a>
+              {% empty %}
+                <div class="material-item">
+                  <div style="display:flex; align-items:center; gap:10px;">
+                    <div class="material-icon">📄</div>
+                    <div class="material-content">
+                      <h4 style="margin:0">Process Management Notes</h4>
+                      <p style="margin:2px 0 0; color:var(--muted)">Comprehensive guide to process scheduling</p>
+                    </div>
+                  </div>
+                  <span class="status-badge completed">Completed</span>
                 </div>
-                <span class="due-date">{{ a.due_in }}</span>
-              </div>
-            {% empty %}
-              <p class="text-dim">No assessments scheduled.</p>
-            {% endfor %}
-          </div>
-        </div>
-      </div>
-
-      <!-- Right column -->
-      <aside class="right-column">
-        <div class="content-card">
-          <h3>🤖 AI Recommendations</h3>
-          <div class="recommendation-list">
-            {% for r in recommendations %}
-              <div class="recommendation {% if r.type == 'focus' %}focus{% elif r.type == 'next' %}next-steps{% endif %}" style="border:1px dashed #1f2937; border-radius:12px; padding:12px; margin:10px 0">
-                <h4>{{ r.heading }}</h4>
-                <p class="text-dim">{{ r.text }}</p>
-                {% if r.cta_label %}<a class="btn-small" href="{{ r.cta_url|default:'#' }}">{{ r.cta_label }}</a>{% endif %}
-              </div>
-            {% empty %}
-              <p class="text-dim">No recommendations yet.</p>
-            {% endfor %}
+                <div class="material-item">
+                  <div style="display:flex; align-items:center; gap:10px;">
+                    <div class="material-icon">🎥</div>
+                    <div class="material-content">
+                      <h4 style="margin:0">Memory Management Video</h4>
+                      <p style="margin:2px 0 0; color:var(--muted)">45 min • Virtual memory concepts</p>
+                    </div>
+                  </div>
+                  <span class="status-badge in-progress">In Progress</span>
+                </div>
+              {% endfor %}
+            </div>
           </div>
         </div>
 
-        <div class="content-card">
-          <h3>📈 Progress Tracking</h3>
-          <div class="progress-list">
-            {% for label, pct in progress.topics.items %}
+        <!-- Right column -->
+        <aside class="right-column">
+          <div class="content-card">
+            <h3>🤖 OS Recommendations</h3>
+            <div class="recommendation-list">
+              <div class="recommendation focus" style="border:1px dashed #1f2937; border-radius:12px; padding:12px; margin:10px 0">
+                <h4>📈 Focus Area</h4>
+                <p class="text-dim">Review deadlock prevention algorithms - detected difficulty in recent quiz.</p>
+                <a class="btn-small" href="#">Study Deadlocks</a>
+              </div>
+              <div class="recommendation next-steps" style="border:1px dashed #1f2937; border-radius:12px; padding:12px; margin:10px 0">
+                <h4>🎯 Next Steps</h4>
+                <p class="text-dim">Great progress on memory! Ready for file system concepts.</p>
+                <a class="btn-small" href="#">Continue</a>
+              </div>
+            </div>
+          </div>
+
+          <div class="content-card">
+            <h3>📈 OS Progress Tracking</h3>
+            <div class="progress-list">
               <div class="progress-item">
                 <div class="progress-header">
-                  <span>{{ label|title|cut:"_" }}</span>
-                  <span>{{ pct|default:0 }}%</span>
+                  <span>Process Management</span>
+                  <span>95%</span>
                 </div>
                 <div class="progress-bar">
-                  <div class="progress-fill" style="width: {{ pct|default:0 }}%"></div>
+                  <div class="progress-fill" style="width: 95%"></div>
                 </div>
               </div>
-            {% empty %}
-              <p class="text-dim">No topic progress yet.</p>
-            {% endfor %}
+              <div class="progress-item">
+                <div class="progress-header">
+                  <span>Memory Management</span>
+                  <span>72%</span>
+                </div>
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: 72%"></div>
+                </div>
+              </div>
+              <div class="progress-item">
+                <div class="progress-header">
+                  <span>File Systems</span>
+                  <span>45%</span>
+                </div>
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: 45%"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </section>
+    </div>
+
+    <!-- Database Systems 3 Content -->
+    <div class="subject-content" id="db3-content">
+      <!-- Course header -->
+      <section class="course-header">
+        <div class="course-info">
+          <h2>🗄️ Database Systems 3</h2>
+          <p class="text-dim">Advanced database concepts, optimization, and transaction management</p>
+        </div>
+
+        <div class="progress-summary">
+          <div class="progress-value">{{ progress.db3_progress|default:65 }}%</div>
+          <p class="text-dim">Course Progress</p>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: {{ progress.db3_progress|default:65 }}%"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- DB3 Stats -->
+      <section class="stats-grid">
+        <article class="stat-card">
+          <div class="stat-icon">📊</div>
+          <div class="stat-content">
+            <p class="stat-number">{{ progress.db3_chapters|default:9 }}</p>
+            <p class="stat-label">Topics Completed</p>
+          </div>
+        </article>
+        <article class="stat-card">
+          <div class="stat-icon">💾</div>
+          <div class="stat-content">
+            <p class="stat-number">{{ progress.db3_queries|default:15 }}</p>
+            <p class="stat-label">SQL Queries Practiced</p>
+          </div>
+        </article>
+        <article class="stat-card">
+          <div class="stat-icon">🧩</div>
+          <div class="stat-content">
+            <p class="stat-number">{{ progress.db3_exercises|default:7 }}</p>
+            <p class="stat-label">Exercises Completed</p>
+          </div>
+        </article>
+        <article class="stat-card">
+          <div class="stat-icon">🏆</div>
+          <div class="stat-content">
+            <p class="stat-number">{{ progress.db3_score|default:78 }}%</p>
+            <p class="stat-label">Average Score</p>
+          </div>
+        </article>
+      </section>
+
+      <section class="content-grid">
+        <!-- Left column -->
+        <div class="left-column">
+          <div class="content-card">
+            <h3>📖 Continue Learning - Database Systems</h3>
+            <div class="current-topic">
+              <div class="topic-header" style="display:flex; justify-content:space-between; align-items:center;">
+                <h4>{{ db3_current_topic.title|default:"Chapter 5: Query Optimization" }}</h4>
+                <span class="status-badge in-progress">{{ db3_current_topic.status|default:"In Progress" }}</span>
+              </div>
+              <p>{{ db3_current_topic.summary|default:"Learn advanced query optimization techniques, indexing strategies, and performance tuning." }}</p>
+              <div class="topic-actions" style="display:flex; gap:8px; flex-wrap:wrap;">
+                <a class="btn-primary" href="{{ db3_current_topic.read_url|default:'/learning/lessons/6/' }}">Continue Reading</a>
+                <a class="btn-secondary" href="{{ db3_current_topic.practice_url|default:'#' }}">Practice SQL</a>
+              </div>
+            </div>
+          </div>
+
+          <div class="content-card">
+            <h3>📚 Database Learning Materials</h3>
+            <div class="material-list">
+              {% for m in db3_materials %}
+                <div class="material-item">
+                  <div style="display:flex; align-items:center; gap:10px;">
+                    <div class="material-icon">{{ m.icon|default:"📄" }}</div>
+                    <div class="material-content">
+                      <h4 style="margin:0">{{ m.title }}</h4>
+                      <p style="margin:2px 0 0; color:var(--muted)">{{ m.subtitle }}</p>
+                    </div>
+                  </div>
+                  <span class="status-badge {{ m.status_class }}">{{ m.status_label }}</span>
+                </div>
+              {% empty %}
+                <div class="material-item">
+                  <div style="display:flex; align-items:center; gap:10px;">
+                    <div class="material-icon">📊</div>
+                    <div class="material-content">
+                      <h4 style="margin:0">Normalization Theory</h4>
+                      <p style="margin:2px 0 0; color:var(--muted)">1NF, 2NF, 3NF, and BCNF explained</p>
+                    </div>
+                  </div>
+                  <span class="status-badge completed">Completed</span>
+                </div>
+                <div class="material-item">
+                  <div style="display:flex; align-items:center; gap:10px;">
+                    <div class="material-icon">💾</div>
+                    <div class="material-content">
+                      <h4 style="margin:0">SQL Query Optimization</h4>
+                      <p style="margin:2px 0 0; color:var(--muted)">Advanced indexing and performance</p>
+                    </div>
+                  </div>
+                  <span class="status-badge in-progress">In Progress</span>
+                </div>
+                <div class="material-item">
+                  <div style="display:flex; align-items:center; gap:10px;">
+                    <div class="material-icon">🔄</div>
+                    <div class="material-content">
+                      <h4 style="margin:0">Transaction Management</h4>
+                      <p style="margin:2px 0 0; color:var(--muted)">ACID properties and concurrency</p>
+                    </div>
+                  </div>
+                  <span class="status-badge not-started">Not Started</span>
+                </div>
+              {% endfor %}
+            </div>
           </div>
         </div>
 
-        <div class="content-card">
-          <h3>🔥 Study Streak</h3>
-          <div class="streak-display" style="text-align:center">
-            <div class="streak-number" style="font-size:32px; font-weight:800">{{ progress.study_streak|default:0 }}</div>
-            <p class="text-dim">Days in a row</p>
-            <p class="streak-motivation">Keep it up! You’re close to a new record.</p>
+        <!-- Right column -->
+        <aside class="right-column">
+          <div class="content-card">
+            <h3>🤖 Database Recommendations</h3>
+            <div class="recommendation-list">
+              <div class="recommendation focus" style="border:1px dashed #1f2937; border-radius:12px; padding:12px; margin:10px 0">
+                <h4>📈 Focus Area</h4>
+                <p class="text-dim">Practice JOIN operations - detected complexity in recent exercises.</p>
+                <a class="btn-small" href="#">SQL Practice</a>
+              </div>
+              <div class="recommendation next-steps" style="border:1px dashed #1f2937; border-radius:12px; padding:12px; margin:10px 0">
+                <h4>🎯 Next Steps</h4>
+                <p class="text-dim">Excellent normalization work! Ready for transaction concepts.</p>
+                <a class="btn-small" href="#">Continue</a>
+              </div>
+            </div>
           </div>
-        </div>
 
-        <div class="content-card">
-          <h3>⚡ Quick Actions</h3>
-          <div class="action-buttons" style="display:grid; gap:8px">
-            <a class="btn-primary full-width" href="{% url 'learning:quiz_list' %}">Take Practice Quiz</a>
-            <a class="btn-secondary full-width" href="{% url 'learning:flashcards' %}">Review Flashcards</a>
-            <a class="btn-secondary full-width" href="{% url 'learning:ask_ai' %}">Ask AI Tutor</a>
+          <div class="content-card">
+            <h3>📈 Database Progress Tracking</h3>
+            <div class="progress-list">
+              <div class="progress-item">
+                <div class="progress-header">
+                  <span>SQL Fundamentals</span>
+                  <span>90%</span>
+                </div>
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: 90%"></div>
+                </div>
+              </div>
+              <div class="progress-item">
+                <div class="progress-header">
+                  <span>Database Design</span>
+                  <span>75%</span>
+                </div>
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: 75%"></div>
+                </div>
+              </div>
+              <div class="progress-item">
+                <div class="progress-header">
+                  <span>Query Optimization</span>
+                  <span>60%</span>
+                </div>
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: 60%"></div>
+                </div>
+              </div>
+              <div class="progress-item">
+                <div class="progress-header">
+                  <span>Transactions</span>
+                  <span>25%</span>
+                </div>
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: 25%"></div>
+                </div>
+              </div>
+            </div>
           </div>
+
+          <div class="content-card">
+            <h3>⚡ Quick Actions</h3>
+            <div class="action-buttons" style="display:grid; gap:8px">
+              <a class="btn-primary full-width" href="/learning/quiz_list/">Practice Quiz</a>
+              <a class="btn-secondary full-width" href="/learning/ai/study-plan/">Study Plan</a>
+              <a class="btn-secondary full-width" href="/learning/ask_ai/">Ask AI Tutor</a>
+            </div>
+          </div>
+        </aside>
+      </section>
+    </div>
+
+    <!-- Cross-Subject Analytics -->
+    <section class="content-card" style="margin-top: 2rem;">
+      <h3>📊 Cross-Subject Analytics</h3>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px;">
+        <div class="overview-card">
+          <h4>Learning Velocity</h4>
+          <p style="font-size: 20px; font-weight: 700; margin: 4px 0;">1.2x Average</p>
+          <small style="color: var(--muted);">Across both subjects</small>
         </div>
-      </aside>
+        <div class="overview-card">
+          <h4>Strongest Area</h4>
+          <p style="font-size: 16px; font-weight: 700; margin: 4px 0;">SQL Queries</p>
+          <small style="color: var(--muted);">95% accuracy rate</small>
+        </div>
+        <div class="overview-card">
+          <h4>Focus Needed</h4>
+          <p style="font-size: 16px; font-weight: 700; margin: 4px 0;">OS Synchronization</p>
+          <small style="color: var(--muted);">Deadlock concepts</small>
+        </div>
+        <div class="overview-card">
+          <h4>Study Pattern</h4>
+          <p style="font-size: 16px; font-weight: 700; margin: 4px 0;">Morning Learner</p>
+          <small style="color: var(--muted);">Peak performance 9-11 AM</small>
+        </div>
+      </div>
     </section>
   </main>
 
   <script>
-    // Tiny JS to toggle user dropdown and close it on outside click
-    (function () {
+    // Subject tab switching functionality
+    document.addEventListener('DOMContentLoaded', function() {
+      const tabs = document.querySelectorAll('.subject-tab');
+      const contents = document.querySelectorAll('.subject-content');
+      
+      tabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+          const subject = this.dataset.subject;
+          
+          // Update active tab
+          tabs.forEach(t => t.classList.remove('active'));
+          this.classList.add('active');
+          
+          // Update active content
+          contents.forEach(c => c.classList.remove('active'));
+          document.getElementById(subject + '-content').classList.add('active');
+          
+          // Track subject selection for analytics
+          if (window.aiDashboard) {
+            window.aiDashboard.trackSubjectSwitch(subject);
+          }
+        });
+      });
+      
+      // User menu dropdown functionality
       const menu = document.getElementById('userMenu');
-      if (!menu) return;
-      const avatar = document.getElementById('avatar');
-      const dropdown = document.getElementById('dropdown');
+      if (menu) {
+        const avatar = document.getElementById('avatar');
+        const dropdown = document.getElementById('dropdown');
 
-      const toggle = (e) => {
-        e?.stopPropagation();
-        dropdown.style.display = (dropdown.style.display === 'block') ? 'none' : 'block';
-      };
+        const toggle = (e) => {
+          e?.stopPropagation();
+          dropdown.style.display = (dropdown.style.display === 'block') ? 'none' : 'block';
+        };
 
-      avatar.addEventListener('click', toggle);
-      document.addEventListener('click', (e) => {
-        if (!menu.contains(e.target)) dropdown.style.display = 'none';
-      });
-      window.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') dropdown.style.display = 'none';
-      });
-    })();
+        avatar.addEventListener('click', toggle);
+        document.addEventListener('click', (e) => {
+          if (!menu.contains(e.target)) dropdown.style.display = 'none';
+        });
+        window.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') dropdown.style.display = 'none';
+        });
+      }
+    });
   </script>
   <script src="{% static 'js/dashboard.js' %}"></script>
 </body>

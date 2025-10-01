@@ -1,0 +1,60 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title|default:"Settings - OS2 Learn" }}</title>
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-container">
+            <div class="brand">
+                <div class="brand-icon">🧠</div>
+                <div class="brand-text">
+                    <h1>OS2 Learn</h1>
+                    <p>AI-Powered Learning Platform</p>
+                </div>
+            </div>
+            <div class="user-info">
+                <div class="user-details">
+                    <p class="welcome-text">{{ user.first_name }} {{ user.last_name }}</p>
+                    <p class="user-level">Account Settings</p>
+                </div>
+                <div class="user-menu">
+                    <div class="user-avatar">{{ user.first_name.0 }}{{ user.last_name.0 }}</div>
+                    <div class="dropdown-menu">
+                        <a href="{% url 'frontend:dashboard' %}">Dashboard</a>
+                        <a href="{% url 'frontend:profile' %}">Profile</a>
+                        <a href="{% url 'frontend:logout' %}">Logout</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-container">
+        <div class="content-card">
+            <h2>Account Settings</h2>
+            <div style="padding: 20px;">
+                <h3>User Preferences</h3>
+                <p>Settings page coming soon! Here you'll be able to:</p>
+                <ul style="margin-left: 20px; color: var(--muted);">
+                    <li>Change your password</li>
+                    <li>Update email preferences</li>
+                    <li>Set learning goals</li>
+                    <li>Choose notification settings</li>
+                    <li>Select preferred learning style</li>
+                </ul>
+            </div>
+            <div class="topic-actions">
+                <a href="{% url 'frontend:dashboard' %}" class="btn-primary">Back to Dashboard</a>
+                <a href="{% url 'frontend:profile' %}" class="btn-secondary">View Profile</a>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

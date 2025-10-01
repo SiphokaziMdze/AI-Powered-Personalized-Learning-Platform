@@ -1,320 +1,277 @@
-# frontend/views.py
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
-from django.views.decorators.http import require_POST
+from django.contrib.auth.models import User
+from django.contrib import messages
 from django.http import JsonResponse
-from django.core.exceptions import ValidationError
-from django.core.validators import validate_email
-from learning.models import StudentProfile, LessonProgress, Course, Lesson
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 from django.db.models import Avg, Count, Q
+from learning.models import *
 import json
 
-def home_view(request):
-    """Landing page view"""
+def home(request):
+    """Landing page"""
     if request.user.is_authenticated:
         return redirect('frontend:dashboard')
     
     context = {
-        'title': 'OS2 Learn - AI-Powered Operating Systems Learning'
+        'title': 'EduCore AI - Intelligent Learning Platform',
+        'total_courses': Course.objects.filter(is_published=True).count(),
+        'total_lessons': Lesson.objects.filter(course__is_published=True).count(),
+        'success_rate': 95,  # This would be calculated from actual data
     }
-    return render(request, 'index.html', context)
-
-@require_POST
-def api_signup(request):
-    """Handle user registration via AJAX"""
-    try:
-        email = request.POST.get('email', '').strip().lower()
-        first_name = request.POST.get('firstName', '').strip()
-        last_name = request.POST.get('lastName', '').strip()
-        password = request.POST.get('password', '')
-        
-        # Validation
-        if not all([email, first_name, last_name, password]):
-            return JsonResponse({
-                'success': False, 
-                'message': 'All fields are required.'
-            }, status=400)
-        
-        # Validate email format
-        try:
-            validate_email(email)
-        except ValidationError:
-            return JsonResponse({
-                'success': False, 
-                'message': 'Please enter a valid email address.'
-            }, status=400)
-        
-        # Check password length
-        if len(password) < 6:
-            return JsonResponse({
-                'success': False, 
-                'message': 'Password must be at least 6 characters long.'
-            }, status=400)
-        
-        # Check if user exists
-        if User.objects.filter(Q(email=email) | Q(username=email)).exists():
-            return JsonResponse({
-                'success': False, 
-                'message': 'An account with this email already exists.'
-            }, status=400)
-        
-        # Create user (use email as username)
-        user = User.objects.create_user(
-            username=email,
-            email=email,
-            password=password,
-            first_name=first_name,
-            last_name=last_name
-        )
-        
-        # Login the user
-        login(request, user)
-        
-        return JsonResponse({
-            'success': True,
-            'message': 'Account created successfully!',
-            'user': {
-                'id': user.id,
-                'first_name': user.first_name,
-                'last_name': user.last_name,
-                'email': user.email
-            }
-        })
-        
-    except Exception as e:
-        return JsonResponse({
-            'success': False, 
-            'message': 'An error occurred during registration. Please try again.'
-        }, status=500)
-
-@require_POST
-def api_login(request):
-    """Handle user login via AJAX"""
-    try:
-        email = request.POST.get('email', '').strip().lower()
-        password = request.POST.get('password', '')
-        
-        if not email or not password:
-            return JsonResponse({
-                'success': False, 
-                'message': 'Email and password are required.'
-            }, status=400)
-        
-        # Validate email format
-        try:
-            validate_email(email)
-        except ValidationError:
-            return JsonResponse({
-                'success': False, 
-                'message': 'Please enter a valid email address.'
-            }, status=400)
-        
-        # Try to authenticate with email as username
-        user = authenticate(request, username=email, password=password)
-        
-        if user is not None:
-            if user.is_active:
-                login(request, user)
-                return JsonResponse({
-                    'success': True,
-                    'message': 'Login successful!',
-                    'user': {
-                        'id': user.id,
-                        'first_name': user.first_name,
-                        'last_name': user.last_name,
-                        'email': user.email
-                    }
-                })
-            else:
-                return JsonResponse({
-                    'success': False, 
-                    'message': 'Your account has been disabled. Please contact support.'
-                }, status=400)
-        else:
-            return JsonResponse({
-                'success': False, 
-                'message': 'Invalid email or password.'
-            }, status=400)
-            
-    except Exception as e:
-        return JsonResponse({
-            'success': False, 
-            'message': 'An error occurred during login. Please try again.'
-        }, status=500)
-
-def user_logout(request):
-    """Handle user logout"""
-    logout(request)
-    return redirect('home')
+    return render(request, 'frontend/home.html', context)
 
 @login_required
-def dashboard_view(request):
-    """Dashboard view for authenticated users"""
-    user = request.user
-    
-    # Get or create student profile
-    profile, created = StudentProfile.objects.get_or_create(user=user)
-    
-    # Calculate progress data from your models
-    try:
-        # Get user's lesson progress
-        completed_lessons = LessonProgress.objects.filter(
-            user=user, completed=True
-        ).count()
-        
-        total_lessons = Lesson.objects.count()
-        
-        # Calculate overall progress
-        overall_progress = 0
-        if total_lessons > 0:
-            overall_progress = int((completed_lessons / total_lessons) * 100)
-        
-        # Get quiz attempts and scores
-        quiz_attempts = user.quiz_attempts.filter(finished_at__isnull=False)
-        quizzes_passed = quiz_attempts.filter(score__gte=70).count()
-        avg_score = quiz_attempts.aggregate(avg=Avg('score'))['avg'] or 0
-        
-        # Calculate videos watched (you can extend this based on your video tracking)
-        videos_watched = LessonProgress.objects.filter(
-            user=user, 
-            lesson__resources__kind='video'
-        ).distinct().count()
-        
-        # Calculate study streak (simplified - you may want more sophisticated logic)
-        study_streak = LessonProgress.objects.filter(user=user).count() // 3  # rough estimate
-        
-        progress_data = {
-            'overall_progress': min(overall_progress, 100),
-            'chapters_completed': completed_lessons,
-            'videos_watched': videos_watched,
-            'quizzes_passed': quizzes_passed,
-            'average_score': int(avg_score),
-            'study_streak': study_streak,
-            'topics': {
-                'process_management': min(overall_progress + 15, 100),  # Sample data
-                'memory_management': min(overall_progress - 5, 100),
-                'file_systems': min(overall_progress - 15, 100),
-                'io_systems': min(overall_progress - 25, 100),
-            }
-        }
-        
-        # Sample materials data
-        materials = [
-            {
-                'title': 'Process Synchronization Notes',
-                'subtitle': 'Semaphores, mutexes, and deadlock prevention',
-                'icon': '📄',
-                'status_class': 'completed',
-                'status_label': 'Completed'
-            },
-            {
-                'title': 'File System Implementation',
-                'subtitle': '45 min video • Advanced concepts',
-                'icon': '🎥',
-                'status_class': 'in-progress',
-                'status_label': 'In Progress'
-            },
-            {
-                'title': 'CPU Scheduling Quiz',
-                'subtitle': '15 questions • Test your knowledge',
-                'icon': '🧩',
-                'status_class': 'not-started',
-                'status_label': 'Not Started'
-            }
-        ]
-        
-        # Sample assessments data
-        assessments = [
-            {
-                'title': 'Midterm Exam: Chapters 1-8',
-                'description': 'Comprehensive exam covering process management, memory management, and file systems.',
-                'due_in': 'Due in 5 days',
-                'urgent': True,
-                'action_label': 'Start Practice Test',
-                'action_url': '#'
-            },
-            {
-                'title': 'Programming Assignment 3',
-                'description': 'Implement a simple file system using C programming language.',
-                'due_in': 'Due in 12 days',
-                'urgent': False,
-                'action_label': 'View Details',
-                'action_url': '#'
-            }
-        ]
-        
-        # Sample recommendations
-        recommendations = [
-            {
-                'type': 'focus',
-                'heading': '📈 Focus Area',
-                'text': "You're struggling with deadlock detection. Try the interactive simulation in Chapter 6.",
-                'cta_label': 'Start Simulation',
-                'cta_url': '#'
-            },
-            {
-                'type': 'next',
-                'heading': '🎯 Next Steps',
-                'text': 'Great progress on memory management! Ready for virtual memory concepts.',
-                'cta_label': 'Continue',
-                'cta_url': '#'
-            }
-        ]
-        
-    except Exception as e:
-        # Fallback to sample data if there's an error
-        progress_data = {
-            'overall_progress': 42,
-            'chapters_completed': 7,
-            'videos_watched': 12,
-            'quizzes_passed': 5,
-            'average_score': 76,
-            'study_streak': 3,
-            'topics': {
-                'process_management': 60,
-                'memory_management': 40,
-                'file_systems': 25,
-                'io_systems': 45,
-            }
-        }
-        materials = []
-        assessments = []
-        recommendations = []
-    
-    context = {
-        'title': 'Dashboard - OS2 Learn',
-        'user': user,
-        'progress': progress_data,
-        'materials': materials,
-        'assessments': assessments,
-        'recommendations': recommendations,
-        'current_topic': {
-            'title': 'Chapter 7: Memory Management',
-            'summary': 'Learn about virtual memory, paging, and segmentation techniques in modern operating systems.',
-            'status': 'In Progress',
-            'read_url': '#',
-            'video_url': '#'
-        }
-    }
-    
-    return render(request, 'dashboard.html', context)
+def dashboard(request):
+    """Main dashboard view"""
+    # Import here to avoid circular imports
+    from learning.views import dashboard as learning_dashboard
+    return learning_dashboard(request)
 
 @login_required
 def profile_view(request):
     """User profile view"""
+    profile, created = UserProfile.objects.get_or_create(user=request.user)
+    
+    # Calculate user statistics
+    user_courses = Course.objects.filter(
+        lessons__userProgress__user=request.user
+    ).distinct()
+    
+    total_lessons = Lesson.objects.filter(course__in=user_courses).count()
+    completed_lessons = UserProgress.objects.filter(
+        user=request.user,
+        is_completed=True
+    ).count()
+    
+    quiz_attempts = QuizAttempt.objects.filter(user=request.user)
+    total_quizzes = quiz_attempts.count()
+    passed_quizzes = quiz_attempts.filter(is_passed=True).count()
+    
+    avg_score = quiz_attempts.aggregate(
+        avg_score=Avg('score')
+    )['avg_score'] or 0
+    
+    # Recent activity
+    recent_progress = UserProgress.objects.filter(
+        user=request.user
+    ).select_related('course', 'lesson').order_by('-last_accessed')[:5]
+    
     context = {
-        'title': 'Profile - OS2 Learn',
-        'user': request.user
+        'title': 'My Profile - EduCore AI',
+        'profile': profile,
+        'user_courses': user_courses,
+        'total_lessons': total_lessons,
+        'completed_lessons': completed_lessons,
+        'completion_rate': (completed_lessons / total_lessons * 100) if total_lessons > 0 else 0,
+        'total_quizzes': total_quizzes,
+        'passed_quizzes': passed_quizzes,
+        'quiz_pass_rate': (passed_quizzes / total_quizzes * 100) if total_quizzes > 0 else 0,
+        'avg_score': round(avg_score, 1),
+        'recent_progress': recent_progress,
     }
-    return render(request, 'profile.html', context)
+    
+    return render(request, 'frontend/profile.html', context)
 
 @login_required
 def settings_view(request):
     """User settings view"""
+    profile, created = UserProfile.objects.get_or_create(user=request.user)
+    
+    if request.method == 'POST':
+        try:
+            # Update user basic info
+            user = request.user
+            user.first_name = request.POST.get('first_name', '').strip()
+            user.last_name = request.POST.get('last_name', '').strip()
+            user.email = request.POST.get('email', user.email).strip()
+            user.save()
+            
+            # Update profile
+            profile.bio = request.POST.get('bio', '').strip()
+            profile.location = request.POST.get('location', '').strip()
+            profile.timezone = request.POST.get('timezone', 'UTC')
+            profile.notifications_enabled = request.POST.get('notifications_enabled') == 'on'
+            profile.preferred_learning_style = request.POST.get('preferred_learning_style', '')
+            
+            # Handle birth date
+            birth_date = request.POST.get('birth_date')
+            if birth_date:
+                try:
+                    from datetime import datetime
+                    profile.birth_date = datetime.strptime(birth_date, '%Y-%m-%d').date()
+                except ValueError:
+                    profile.birth_date = None
+            
+            # Handle avatar upload
+            if 'avatar' in request.FILES:
+                profile.avatar = request.FILES['avatar']
+            
+            profile.save()
+            
+            messages.success(request, 'Settings updated successfully!')
+            
+        except Exception as e:
+            messages.error(request, f'Error updating settings: {str(e)}')
+        
+        return redirect('frontend:settings')
+    
     context = {
-        'title': 'Settings - OS2 Learn',
-        'user': request.user
+        'title': 'Settings - EduCore AI',
+        'profile': profile,
+        'timezones': [
+            ('UTC', 'UTC'),
+            ('US/Eastern', 'Eastern Time (EST/EDT)'),
+            ('US/Central', 'Central Time (CST/CDT)'),
+            ('US/Mountain', 'Mountain Time (MST/MDT)'),
+            ('US/Pacific', 'Pacific Time (PST/PDT)'),
+            ('Europe/London', 'London (GMT/BST)'),
+            ('Europe/Paris', 'Paris (CET/CEST)'),
+            ('Europe/Berlin', 'Berlin (CET/CEST)'),
+            ('Asia/Tokyo', 'Tokyo (JST)'),
+            ('Asia/Shanghai', 'Shanghai (CST)'),
+            ('Australia/Sydney', 'Sydney (AEST/AEDT)'),
+        ],
+        'learning_styles': [
+            ('', 'Not specified'),
+            ('visual', 'Visual Learner'),
+            ('auditory', 'Auditory Learner'),
+            ('kinesthetic', 'Kinesthetic Learner'),
+            ('reading', 'Reading/Writing Learner'),
+        ]
     }
-    return render(request, 'settings.html', context)
+    
+    return render(request, 'frontend/settings.html', context)
+
+def login_view(request):
+    """Login page"""
+    if request.user.is_authenticated:
+        return redirect('frontend:dashboard')
+    
+    context = {
+        'title': 'Login - EduCore AI',
+    }
+    return render(request, 'frontend/login.html', context)
+
+def signup_view(request):
+    """Signup page"""
+    if request.user.is_authenticated:
+        return redirect('frontend:dashboard')
+    
+    context = {
+        'title': 'Sign Up - EduCore AI',
+    }
+    return render(request, 'frontend/signup.html', context)
+
+def logout_view(request):
+    """Logout and redirect"""
+    logout(request)
+    messages.success(request, 'You have been logged out successfully.')
+    return redirect('frontend:home')
+
+@csrf_exempt
+def api_login(request):
+    """API endpoint for login"""
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        email = data.get('email')
+        password = data.get('password')
+        
+        if not email or not password:
+            return JsonResponse({
+                'success': False,
+                'message': 'Email and password are required'
+            })
+        
+        # Try to authenticate with email
+        try:
+            user = User.objects.get(email=email)
+            user = authenticate(request, username=user.username, password=password)
+        except User.DoesNotExist:
+            user = None
+        
+        if user is not None:
+            login(request, user)
+            return JsonResponse({
+                'success': True,
+                'message': 'Login successful',
+                'redirect': '/dashboard/'
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'message': 'Invalid email or password'
+            })
+    
+    return JsonResponse({'success': False, 'message': 'Invalid request method'})
+
+@csrf_exempt
+def api_signup(request):
+    """API endpoint for signup"""
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        
+        first_name = data.get('firstName', '').strip()
+        last_name = data.get('lastName', '').strip()
+        email = data.get('email', '').strip()
+        password = data.get('password', '')
+        confirm_password = data.get('confirmPassword', '')
+        
+        # Validation
+        if not all([first_name, last_name, email, password]):
+            return JsonResponse({
+                'success': False,
+                'message': 'All fields are required'
+            })
+        
+        if password != confirm_password:
+            return JsonResponse({
+                'success': False,
+                'message': 'Passwords do not match'
+            })
+        
+        if len(password) < 8:
+            return JsonResponse({
+                'success': False,
+                'message': 'Password must be at least 8 characters long'
+            })
+        
+        # Check if email already exists
+        if User.objects.filter(email=email).exists():
+            return JsonResponse({
+                'success': False,
+                'message': 'An account with this email already exists'
+            })
+        
+        try:
+            # Create user
+            username = email  # Use email as username
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                password=password,
+                first_name=first_name,
+                last_name=last_name
+            )
+            
+            # Create profile
+            UserProfile.objects.create(user=user)
+            
+            # Log in the user
+            login(request, user)
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Account created successfully',
+                'redirect': '/dashboard/'
+            })
+            
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'message': f'Error creating account: {str(e)}'
+            })
+    
+    return JsonResponse({'success': False, 'message': 'Invalid request method'})

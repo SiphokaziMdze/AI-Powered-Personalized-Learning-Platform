@@ -1,116 +1,265 @@
-# backend/learning/views.py
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
-from .models import Course, Lesson, Quiz, Question, Attempt
+from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import messages
+from django.http import JsonResponse
+from django.core.paginator import Paginator
+from django.db.models import Avg, Count, Q
+from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
+from datetime import timedelta
+from .models import *
+from .forms import *
+import json
+
+# ============ PUBLIC/STUDENT VIEWS ============
 
 @login_required
-def course_list(request):
-    """List all available courses"""
-    courses = Course.objects.filter(is_published=True)
-    context = {
-        'title': 'Courses - OS2 Learn',
-        'courses': courses
-    }
-    return render(request, 'learning/course_list.html', context)
-
-@login_required
-def course_detail(request, slug):
-    """Course detail view with lessons"""
-    course = get_object_or_404(Course, slug=slug, is_published=True)
-    lessons = course.lessons.all()
+def dashboard(request):
+    """Main dashboard view"""
+    user_courses = Course.objects.filter(
+        lessons__userprogress__user=request.user
+    ).distinct()
     
-    context = {
-        'title': f'{course.title} - OS2 Learn',
-        'course': course,
-        'lessons': lessons
-    }
-    return render(request, 'learning/course_detail.html', context)
-
-@login_required
-def lesson_detail(request, lesson_id):
-    """Individual lesson view"""
-    lesson = get_object_or_404(Lesson, id=lesson_id)
-    resources = lesson.resources.all()
-    
-    # Mark as accessed (you can extend this logic)
-    from .models import LessonProgress
-    progress, created = LessonProgress.objects.get_or_create(
+    total_lessons = Lesson.objects.filter(course__in=user_courses).count()
+    completed_lessons = UserProgress.objects.filter(
         user=request.user,
-        lesson=lesson,
-        defaults={'completed': False}
-    )
-    progress.save()  # Updates last_accessed
+        is_completed=True
+    ).count()
+    
+    overall_progress = (completed_lessons / total_lessons * 100) if total_lessons > 0 else 0
+    
+    recent_progress = UserProgress.objects.filter(
+        user=request.user
+    ).select_related('course', 'lesson').order_by('-last_accessed')[:5]
+    
+    recommendations = AIRecommendation.objects.filter(
+        user=request.user,
+        is_active=True
+    ).order_by('-priority', '-created_at')[:3]
+    
+    profile, created = UserProfile.objects.get_or_create(user=request.user)
     
     context = {
-        'title': f'{lesson.title} - OS2 Learn',
-        'lesson': lesson,
-        'resources': resources,
-        'progress': progress
+        'user_courses': user_courses,
+        'overall_progress': round(overall_progress, 1),
+        'completed_lessons': completed_lessons,
+        'total_lessons': total_lessons,
+        'recent_progress': recent_progress,
+        'recommendations': recommendations,
+        'study_streak': profile.study_streak,
+        'os2_progress': 78,
+        'db3_progress': 65,
     }
-    return render(request, 'learning/lesson_detail.html', context)
+    
+    return render(request, 'frontend/dashboard.html', context)
 
-@login_required
-def take_quiz(request, quiz_id):
-    """Take a quiz"""
-    quiz = get_object_or_404(Quiz, id=quiz_id, is_active=True)
-    questions = quiz.questions.all()
+# ... (keep your existing views) ...
+
+# ============ ADMIN VIEWS ============
+
+@staff_member_required
+def content_dashboard(request):
+    """Main content management dashboard"""
+    context = {
+        'title': 'Content Management - EduCore AI',
+        'courses': Course.objects.annotate(
+            lesson_count=Count('lessons'),
+            resource_count=Count('lessons__resources')
+        ).order_by('-created_at'),
+        'total_lessons': Lesson.objects.count(),
+        'total_resources': Resource.objects.count(),
+        'total_quizzes': Quiz.objects.count(),
+    }
+    return render(request, 'learning/admin/content_dashboard.html', context)
+
+@staff_member_required
+def course_management(request):
+    """Manage courses"""
+    if request.method == 'POST':
+        form = CourseForm(request.POST)
+        if form.is_valid():
+            course = form.save()
+            messages.success(request, f'Course "{course.title}" created successfully!')
+            return redirect('learning:lesson_management_for_course', course_id=course.id)
+        else:
+            messages.error(request, 'Please fix the errors below.')
+    else:
+        form = CourseForm()
+    
+    courses = Course.objects.annotate(
+        lesson_count=Count('lessons')
+    ).order_by('-created_at')
+    
+    context = {
+        'title': 'Course Management',
+        'form': form,
+        'courses': courses,
+    }
+    return render(request, 'learning/admin/course_management.html', context)
+
+@staff_member_required
+def lesson_management(request, course_id=None):
+    """Manage lessons"""
+    course = get_object_or_404(Course, id=course_id) if course_id else None
     
     if request.method == 'POST':
-        # Process quiz submission
-        attempt = Attempt.objects.create(
-            user=request.user,
-            quiz=quiz,
-            score=0  # Calculate based on answers
-        )
-        
-        # Process answers and calculate score
-        # This is a simplified version - you'd implement full scoring logic
-        
-        messages.success(request, f'Quiz completed! Your score: {attempt.score}%')
-        return redirect('learning:quiz_list')
+        form = LessonForm(request.POST)
+        if form.is_valid():
+            lesson = form.save()
+            messages.success(request, f'Lesson "{lesson.title}" created successfully!')
+            return redirect('learning:lesson_management_for_course', course_id=lesson.course.id)
+    else:
+        form = LessonForm(initial={'course': course} if course else {})
+    
+    lessons = Lesson.objects.select_related('course')
+    if course:
+        lessons = lessons.filter(course=course)
     
     context = {
-        'title': f'{quiz.title} - OS2 Learn',
-        'quiz': quiz,
-        'questions': questions
+        'title': 'Lesson Management',
+        'form': form,
+        'lessons': lessons.order_by('course', 'order'),
+        'course': course,
     }
-    return render(request, 'learning/take_quiz.html', context)
+    return render(request, 'learning/admin/lesson_management.html', context)
 
-@login_required
-def quiz_list(request):
-    """List available quizzes"""
-    quizzes = Quiz.objects.filter(is_active=True)
-    user_attempts = Attempt.objects.filter(user=request.user)
+@staff_member_required
+def resource_management(request, lesson_id=None):
+    """Manage resources"""
+    lesson = get_object_or_404(Lesson, id=lesson_id) if lesson_id else None
+    
+    if request.method == 'POST':
+        form = ResourceForm(request.POST, request.FILES)
+        if form.is_valid():
+            resource = form.save()
+            messages.success(request, f'Resource "{resource.title}" created successfully!')
+            return redirect('learning:resource_management_for_lesson', lesson_id=resource.lesson.id)
+    else:
+        form = ResourceForm(initial={'lesson': lesson} if lesson else {})
+    
+    resources = Resource.objects.select_related('lesson', 'lesson__course')
+    if lesson:
+        resources = resources.filter(lesson=lesson)
     
     context = {
-        'title': 'Quizzes - OS2 Learn',
-        'quizzes': quizzes,
-        'user_attempts': user_attempts
+        'title': 'Resource Management',
+        'form': form,
+        'resources': resources.order_by('lesson'),
+        'lesson': lesson,
     }
-    return render(request, 'learning/quiz_list.html', context)
+    return render(request, 'learning/admin/resource_management.html', context)
 
-@login_required
-def flashcards(request):
-    """Flashcard review system"""
-    context = {
-        'title': 'Flashcards - OS2 Learn',
-        'message': 'Flashcard system coming soon!'
-    }
-    return render(request, 'learning/flashcards.html', context)
+@staff_member_required
+def bulk_upload_view(request):
+    """Bulk upload content"""
+    if request.method == 'POST' and 'json_file' in request.FILES:
+        try:
+            json_file = request.FILES['json_file']
+            data = json.loads(json_file.read().decode('utf-8'))
+            
+            created_courses = 0
+            created_lessons = 0
+            created_resources = 0
+            
+            for course_data in data.get('courses', []):
+                course, created = Course.objects.get_or_create(
+                    slug=course_data['slug'],
+                    defaults={
+                        'title': course_data['title'],
+                        'description': course_data.get('description', ''),
+                        'is_published': course_data.get('is_published', True)
+                    }
+                )
+                if created:
+                    created_courses += 1
+                
+                for lesson_data in course_data.get('lessons', []):
+                    lesson, created = Lesson.objects.get_or_create(
+                        course=course,
+                        order=lesson_data['order'],
+                        defaults={
+                            'title': lesson_data['title'],
+                            'content': lesson_data.get('content', ''),
+                        }
+                    )
+                    if created:
+                        created_lessons += 1
+                    
+                    for resource_data in lesson_data.get('resources', []):
+                        resource, created = Resource.objects.get_or_create(
+                            lesson=lesson,
+                            title=resource_data['title'],
+                            defaults={
+                                'kind': resource_data.get('kind', 'note'),
+                                'content': resource_data.get('content', ''),
+                            }
+                        )
+                        if created:
+                            created_resources += 1
+            
+            messages.success(
+                request, 
+                f'Upload successful! Created {created_courses} courses, '
+                f'{created_lessons} lessons, {created_resources} resources.'
+            )
+            
+        except Exception as e:
+            messages.error(request, f'Error: {str(e)}')
+        
+        return redirect('learning:bulk_upload')
+    
+    return render(request, 'learning/admin/bulk_upload.html', {
+        'title': 'Bulk Upload'
+    })
 
-@login_required
-def ask_ai(request):
-    """AI Tutor interface"""
-    context = {
-        'title': 'AI Tutor - OS2 Learn',
-        'message': 'AI Tutor system coming soon!'
-    }
-    return render(request, 'learning/ask_ai.html', context)
+@staff_member_required
+def generate_sample_content(request):
+    """Generate sample content"""
+    if request.method == 'POST':
+        try:
+            # Create OS2 course
+            os_course, created = Course.objects.get_or_create(
+                slug='operating-systems-2',
+                defaults={
+                    'title': 'Operating Systems 2',
+                    'description': 'Advanced OS concepts',
+                    'is_published': True
+                }
+            )
+            
+            if created:
+                # Create sample lessons
+                for i, title in enumerate(['Process Management', 'Memory Systems', 'File Systems'], 1):
+                    lesson = Lesson.objects.create(
+                        course=os_course,
+                        title=title,
+                        order=i,
+                        content=f'Content for {title}'
+                    )
+                    
+                    Resource.objects.create(
+                        lesson=lesson,
+                        title=f'{title} - Notes',
+                        kind='note',
+                        content=f'Study notes for {title}'
+                    )
+                
+                messages.success(request, 'Sample content created successfully!')
+            else:
+                messages.info(request, 'Sample content already exists.')
+                
+        except Exception as e:
+            messages.error(request, f'Error: {str(e)}')
+    
+    return render(request, 'learning/admin/generate_sample.html', {
+        'title': 'Generate Sample Content'
+    })
 
-@login_required
-def profile(request):
-    return render(request, "profile.html", {
-        "title": "My Profile",
+@staff_member_required
+def preview_content(request, resource_id):
+    """Preview content"""
+    resource = get_object_or_404(Resource, id=resource_id)
+    return render(request, 'learning/admin/content_preview.html', {
+        'resource': resource
     })

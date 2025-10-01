@@ -29,6 +29,7 @@ urlpatterns = [
     path("", home_view, name="home"),  # Landing page
     path("", include("frontend.urls")),  # Frontend app URLs
     path("learning/", include("learning.urls")),  # Learning app URLs
+    path("", include(("frontend.urls", "learning"), namespace="learning")),
     path("logout/", auth_views.LogoutView.as_view(next_page="home"), name="logout"),
 ]
 

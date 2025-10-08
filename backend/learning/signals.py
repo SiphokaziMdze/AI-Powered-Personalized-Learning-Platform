@@ -2,15 +2,15 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.contrib.auth.models import User
-from .models import StudentProfile
+from .models import UserProfile  # Changed from StudentProfile
 
 @receiver(post_save, sender=User)
 def create_profile(sender, instance, created, **kwargs):
     if created:
-        StudentProfile.objects.create(user=instance)
+        UserProfile.objects.create(user=instance)  # Changed from StudentProfile
 
 @receiver(post_save, sender=User)
 def save_profile(sender, instance, **kwargs):
     # ensure profile exists (for existing users)
-    StudentProfile.objects.get_or_create(user=instance)
+    profile, _ = UserProfile.objects.get_or_create(user=instance)
     instance.profile.save()

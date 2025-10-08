@@ -1,10 +1,11 @@
-
-# learning/models.py
+# backend/learning/models.py
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils.text import slugify
 import uuid
+from datetime import timedelta
+
 
 class Course(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -74,7 +75,7 @@ class UserProgress(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, null=True, blank=True)
     completion_percentage = models.FloatField(default=0.0, validators=[MinValueValidator(0), MaxValueValidator(100)])
-    time_spent = models.DurationField(default='00:00:00')
+    time_spent = models.DurationField(default=timedelta(0))
     last_accessed = models.DateTimeField(auto_now=True)
     is_completed = models.BooleanField(default=False)
     

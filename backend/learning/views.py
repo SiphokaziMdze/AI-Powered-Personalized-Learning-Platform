@@ -1,3 +1,4 @@
+# backend/learning/views.py
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
@@ -50,11 +51,53 @@ def dashboard(request):
         'study_streak': profile.study_streak,
         'os2_progress': 78,
         'db3_progress': 65,
+        'progress': {
+            'overall_progress': round(overall_progress, 1),
+            'study_streak': profile.study_streak,
+        }
     }
     
-    return render(request, 'frontend/dashboard.html', context)
+    return render(request, 'dashboard.html', context)
 
-# ... (keep your existing views) ...
+@login_required
+def course_list(request):
+    """List all published courses"""
+    courses = Course.objects.filter(is_published=True).prefetch_related('lessons')
+    
+    context = {
+        'courses': courses,
+        'title': 'Courses - EduCore AI'
+    }
+    return render(request, 'learning/course_list.html', context)
+
+@login_required
+def lesson_detail(request, lesson_id):
+    """Display lesson detail"""
+    lesson = get_object_or_404(Lesson, id=lesson_id)
+    
+    # Track progress
+    progress, created = UserProgress.objects.get_or_create(
+        user=request.user,
+        course=lesson.course,
+        lesson=lesson,
+        defaults={'completion_percentage': 0}
+    )
+    
+    progress.last_accessed = timezone.now()
+    progress.save()
+    
+    resources = lesson.resources.all()
+    quizzes = lesson.quizzes.filter(is_active=True)
+    
+    context = {
+        'lesson': lesson,
+        'resources': resources,
+        'quizzes': quizzes,
+        'progress': progress,
+        'title': f'{lesson.title} - EduCore AI'
+    }
+    
+    return render(request, 'learning/lesson_detail.html', context)
 
 # ============ ADMIN VIEWS ============
 
@@ -218,7 +261,6 @@ def generate_sample_content(request):
     """Generate sample content"""
     if request.method == 'POST':
         try:
-            # Create OS2 course
             os_course, created = Course.objects.get_or_create(
                 slug='operating-systems-2',
                 defaults={
@@ -229,7 +271,6 @@ def generate_sample_content(request):
             )
             
             if created:
-                # Create sample lessons
                 for i, title in enumerate(['Process Management', 'Memory Systems', 'File Systems'], 1):
                     lesson = Lesson.objects.create(
                         course=os_course,
@@ -262,4 +303,30 @@ def preview_content(request, resource_id):
     resource = get_object_or_404(Resource, id=resource_id)
     return render(request, 'learning/admin/content_preview.html', {
         'resource': resource
+    })
+
+# Placeholder for AI chatbot views
+@login_required
+def ai_chatbot(request):
+    """AI Chatbot - Coming soon"""
+    return render(request, 'learning/ai_chatbot_placeholder.html', {
+        'title': 'AI Tutor - Coming Soon'
+    })
+
+@login_required
+def chat_message(request):
+    """Chat message API - Coming soon"""
+    return JsonResponse({'error': 'AI Chatbot coming soon'}, status=501)
+
+@login_required
+def get_conversation(request, conversation_id):
+    """Get conversation - Coming soon"""
+    return JsonResponse({'error': 'AI Chatbot coming soon'}, status=501)
+
+# Add this placeholder view for ai_dashboard
+@login_required
+def ai_dashboard(request):
+    """AI Dashboard - Coming soon"""
+    return render(request, 'learning/ai_dashboard_placeholder.html', {
+        'title': 'AI Dashboard - Coming Soon'
     })

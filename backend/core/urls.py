@@ -20,21 +20,20 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
+from frontend.views import home
 from django.conf.urls.static import static
-from frontend.views import home_view
-from django.contrib.auth import views as auth_views
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("", home_view, name="home"),  # Landing page
-    path("", include("frontend.urls")),  # Frontend app URLs
-    path("learning/", include("learning.urls")),  # Learning app URLs
-    path("", include(("frontend.urls", "learning"), namespace="learning")),
-    path("logout/", auth_views.LogoutView.as_view(next_page="home"), name="logout"),
+
+    # Frontend (namespaced as 'frontend')
+    path("", include(("frontend.urls", "frontend"), namespace="frontend")),
+
+    # Learning app (namespaced as 'learning')
+    path("learning/", include(("learning.urls", "learning"), namespace="learning")),
 ]
 
-
-# Serve static files during development
+# Serve static & media in development
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATICFILES_DIRS[0])
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

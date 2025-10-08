@@ -107,7 +107,7 @@ USE_TZ = True
 STATIC_URL = '/static/'
 # STATIC FILES DIRECTORIES
 STATICFILES_DIRS = [
-    BASE_DIR.parent / "frontend" / "static",  # CSS/JS files
+    BASE_DIR.parent / "frontend" / "static"  # CSS/JS files
 ]
 
 # Media (user uploads like PDFs)
@@ -117,6 +117,6 @@ MEDIA_ROOT = BASE_DIR.parent / "media"
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-LOGIN_URL = "login"
-LOGIN_REDIRECT_URL = "dashboard"
-LOGOUT_REDIRECT_URL = "home"
+LOGIN_URL = "frontend:login"
+LOGIN_REDIRECT_URL = "frontend:dashboard"
+LOGOUT_REDIRECT_URL = "frontend:home"

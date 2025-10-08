@@ -1,3 +1,4 @@
+#backend/frontend/views.py
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
@@ -8,12 +9,15 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.db.models import Avg, Count, Q
 from learning.models import *
+from django.contrib.auth.forms import AuthenticationForm
+from django.urls import reverse
+
 import json
 
 def home(request):
     """Landing page"""
     if request.user.is_authenticated:
-        return redirect('frontend:dashboard')
+        return redirect(':dashboard')
     
     context = {
         'title': 'EduCore AI - Intelligent Learning Platform',
@@ -21,7 +25,7 @@ def home(request):
         'total_lessons': Lesson.objects.filter(course__is_published=True).count(),
         'success_rate': 95,  # This would be calculated from actual data
     }
-    return render(request, 'frontend/home.html', context)
+    return render(request, 'index.html', context)
 
 @login_required
 def dashboard(request):
@@ -73,7 +77,7 @@ def profile_view(request):
         'recent_progress': recent_progress,
     }
     
-    return render(request, 'frontend/profile.html', context)
+    return render(request, 'profile.html', context)
 
 @login_required
 def settings_view(request):
@@ -116,7 +120,7 @@ def settings_view(request):
         except Exception as e:
             messages.error(request, f'Error updating settings: {str(e)}')
         
-        return redirect('frontend:settings')
+        return redirect('settings')
     
     context = {
         'title': 'Settings - EduCore AI',
@@ -143,33 +147,46 @@ def settings_view(request):
         ]
     }
     
-    return render(request, 'frontend/settings.html', context)
+    return render(request, 'settings.html', context)
 
 def login_view(request):
-    """Login page"""
+    """Login page (form-based)"""
     if request.user.is_authenticated:
         return redirect('frontend:dashboard')
-    
+
+    if request.method == 'POST':
+        form = AuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            user = form.get_user()
+            login(request, user)
+            next_url = request.GET.get('next') or reverse('frontend:dashboard')
+            return redirect(next_url)
+        else:
+            messages.error(request, "Invalid email/username or password.")
+    else:
+        form = AuthenticationForm(request)
+
     context = {
         'title': 'Login - EduCore AI',
+        'form': form,
     }
-    return render(request, 'frontend/login.html', context)
+    return render(request, 'login.html', context)
 
 def signup_view(request):
     """Signup page"""
     if request.user.is_authenticated:
-        return redirect('frontend:dashboard')
+        return redirect('dashboard')
     
     context = {
         'title': 'Sign Up - EduCore AI',
     }
-    return render(request, 'frontend/signup.html', context)
+    return render(request, 'signup.html', context)
 
 def logout_view(request):
     """Logout and redirect"""
     logout(request)
     messages.success(request, 'You have been logged out successfully.')
-    return redirect('frontend:home')
+    return redirect(':index')
 
 @csrf_exempt
 def api_login(request):

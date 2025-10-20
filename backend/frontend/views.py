@@ -138,6 +138,10 @@ def settings_view(request):
     
     return render(request, 'settings.html', context)
 
+def login_view(request):
+    """Redirect login route to home where modal login exists"""
+    return redirect('frontend:home')
+
 def logout_view(request):
     """Logout and redirect"""
     logout(request)
@@ -146,111 +150,95 @@ def logout_view(request):
 
 @csrf_exempt
 def api_login(request):
-    """API endpoint for login"""
-    if request.method == 'POST':
+    """Handles login via FormData or JSON"""
+    if request.method != "POST":
+        return JsonResponse({'success': False, 'message': 'Invalid request method'})
+
+    email = request.POST.get("email") or request.POST.get("username")
+    password = request.POST.get("password")
+
+    # Fallback to JSON
+    if not email and request.body:
         try:
             data = json.loads(request.body)
-            email = data.get('email')
-            password = data.get('password')
-            
-            if not email or not password:
-                return JsonResponse({
-                    'success': False,
-                    'message': 'Email and password are required'
-                })
-            
-            # Try to authenticate with email
-            try:
-                user = User.objects.get(email=email)
-                user = authenticate(request, username=user.username, password=password)
-            except User.DoesNotExist:
-                user = None
-            
-            if user is not None:
-                login(request, user)
-                return JsonResponse({
-                    'success': True,
-                    'message': 'Login successful',
-                    'redirect': '/dashboard/'
-                })
-            else:
-                return JsonResponse({
-                    'success': False,
-                    'message': 'Invalid email or password'
-                })
-        except Exception as e:
-            return JsonResponse({
-                'success': False,
-                'message': f'Error: {str(e)}'
-            })
-    
-    return JsonResponse({'success': False, 'message': 'Invalid request method'})
+            email = data.get("email") or data.get("username")
+            password = data.get("password")
+        except json.JSONDecodeError:
+            pass
+
+    if not email or not password:
+        return JsonResponse({'success': False, 'message': 'Email and password are required'})
+
+    # Authenticate by email or username
+    try:
+        u = User.objects.get(email=email)
+        user = authenticate(request, username=u.username, password=password)
+    except User.DoesNotExist:
+        user = authenticate(request, username=email, password=password)
+
+    if user:
+        login(request, user)
+        return JsonResponse({
+            'success': True,
+            'message': 'Login successful',
+            'redirect': '/dashboard/',
+            'user': {
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'email': user.email,
+            }
+        })
+    else:
+        return JsonResponse({'success': False, 'message': 'Invalid credentials'})
+
+    return JsonResponse({'success': False, 'message': 'Invalid credentials'})
 
 @csrf_exempt
 def api_signup(request):
-    """API endpoint for signup"""
-    if request.method == 'POST':
+    """Handles user registration via FormData or JSON"""
+    if request.method != "POST":
+        return JsonResponse({'success': False, 'message': 'Invalid request method'})
+
+    first_name = request.POST.get('firstName', '').strip()
+    last_name = request.POST.get('lastName', '').strip()
+    email = request.POST.get('email', '').strip()
+    password = request.POST.get('password', '')
+    confirm_password = request.POST.get('confirmPassword', '')
+
+    # JSON fallback
+    if not email and request.body:
         try:
             data = json.loads(request.body)
-            
             first_name = data.get('firstName', '').strip()
             last_name = data.get('lastName', '').strip()
             email = data.get('email', '').strip()
             password = data.get('password', '')
             confirm_password = data.get('confirmPassword', '')
-            
-            # Validation
-            if not all([first_name, last_name, email, password]):
-                return JsonResponse({
-                    'success': False,
-                    'message': 'All fields are required'
-                })
-            
-            if password != confirm_password:
-                return JsonResponse({
-                    'success': False,
-                    'message': 'Passwords do not match'
-                })
-            
-            if len(password) < 8:
-                return JsonResponse({
-                    'success': False,
-                    'message': 'Password must be at least 8 characters long'
-                })
-            
-            # Check if email already exists
-            if User.objects.filter(email=email).exists():
-                return JsonResponse({
-                    'success': False,
-                    'message': 'An account with this email already exists'
-                })
-            
-            # Create user
-            username = email
-            user = User.objects.create_user(
-                username=username,
-                email=email,
-                password=password,
-                first_name=first_name,
-                last_name=last_name
-            )
-            
-            # Create profile
-            UserProfile.objects.create(user=user)
-            
-            # Log in the user
-            login(request, user)
-            
-            return JsonResponse({
-                'success': True,
-                'message': 'Account created successfully',
-                'redirect': '/dashboard/'
-            })
-            
-        except Exception as e:
-            return JsonResponse({
-                'success': False,
-                'message': f'Error creating account: {str(e)}'
-            })
-    
-    return JsonResponse({'success': False, 'message': 'Invalid request method'})
+        except json.JSONDecodeError:
+            pass
+
+    if not all([first_name, last_name, email, password]):
+        return JsonResponse({'success': False, 'message': 'All fields are required'})
+    if password != confirm_password:
+        return JsonResponse({'success': False, 'message': 'Passwords do not match'})
+    if len(password) < 6:
+        return JsonResponse({'success': False, 'message': 'Password must be at least 6 characters'})
+
+    if User.objects.filter(email=email).exists():
+        return JsonResponse({'success': False, 'message': 'An account with this email already exists'})
+
+    user = User.objects.create_user(
+        username=email, email=email, password=password,
+        first_name=first_name, last_name=last_name
+    )
+    from learning.models import UserProfile
+    UserProfile.objects.create(user=user)
+
+    login(request, user)
+    return JsonResponse({
+        'success': True,
+        'message': 'Account created successfully',
+        'redirect': '/dashboard/',
+        'user': {'first_name': first_name, 'last_name': last_name, 'email': email},
+    })
+

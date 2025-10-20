@@ -20,20 +20,15 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
-from frontend.views import home
 from django.conf.urls.static import static
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-
-    # Frontend (namespaced as 'frontend')
-    path("", include(("frontend.urls", "frontend"), namespace="frontend")),
-
-    # Learning app (namespaced as 'learning')
-    path("learning/", include(("learning.urls", "learning"), namespace="learning")),
+    path("", include("frontend.urls")),  # Frontend app URLs (includes home page)
+    path("learning/", include("learning.urls")),  # Learning app URLs
 ]
 
-# Serve static & media in development
+# Serve static and media files during development
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATICFILES_DIRS[0])
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

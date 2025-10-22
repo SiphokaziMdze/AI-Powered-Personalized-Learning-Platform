@@ -1,0 +1,153 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} - EduCore AI</title>
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+</head>
+<body>
+    <header class="header">
+        <div class="header-container">
+            <div class="brand">
+                <div class="brand-icon">🎓</div>
+                <div class="brand-text">
+                    <h1>EduCore AI</h1>
+                    <p>Content Management</p>
+                </div>
+            </div>
+            <div class="user-info">
+                <a href="{% url 'learning:content_dashboard' %}" class="btn-secondary">← Dashboard</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <h1>📤 Upload Learning Content</h1>
+
+        {% if messages %}
+        <div style="margin: 1rem 0;">
+            {% for message in messages %}
+            <div style="padding: 1rem; border-radius: 8px; background: {% if message.tags == 'success' %}#10b981{% else %}#ef4444{% endif %}; color: white; margin: 0.5rem 0;">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="content-card">
+            <h2>Upload New Resource</h2>
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <div style="margin: 1rem 0;">
+                    <label>Course:</label>
+                    <select name="course_id" id="courseSelect" onchange="loadLessons()" required style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid var(--ring); background: var(--background); color: var(--text);">
+                        <option value="">-- Select Course --</option>
+                        {% for course in courses %}
+                        <option value="{{ course.id }}">{{ course.title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div style="margin: 1rem 0;">
+                    <label>Lesson:</label>
+                    <select name="lesson_id" id="lessonSelect" required style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid var(--ring); background: var(--background); color: var(--text);">
+                        <option value="">-- Select Lesson --</option>
+                    </select>
+                </div>
+
+                <div style="margin: 1rem 0;">
+                    <label>Title:</label>
+                    <input type="text" name="title" required style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid var(--ring); background: var(--background); color: var(--text);">
+                </div>
+
+                <div style="margin: 1rem 0;">
+                    <label>Resource Type:</label>
+                    <select name="resource_type" style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid var(--ring); background: var(--background); color: var(--text);">
+                        <option value="note">Study Note</option>
+                        <option value="pdf">PDF Document</option>
+                        <option value="video">Video</option>
+                        <option value="image">Image</option>
+                        <option value="link">External Link</option>
+                        <option value="code">Code Example</option>
+                    </select>
+                </div>
+
+                <div style="margin: 1rem 0;">
+                    <label>File Upload (optional):</label>
+                    <input type="file" name="file" style="width: 100%; padding: 0.75rem;">
+                </div>
+
+                <div style="margin: 1rem 0;">
+                    <label>URL (optional):</label>
+                    <input type="url" name="url" placeholder="https://example.com" style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid var(--ring); background: var(--background); color: var(--text);">
+                </div>
+
+                <div style="margin: 1rem 0;">
+                    <label>Description:</label>
+                    <textarea name="description" rows="4" style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid var(--ring); background: var(--background); color: var(--text);"></textarea>
+                </div>
+
+                <button type="submit" class="btn-primary" style="width: 100%; padding: 1rem; margin-top: 1rem;">
+                    📤 Upload Content
+                </button>
+            </form>
+        </div>
+
+        <div class="content-card" style="margin-top: 2rem;">
+            <h2>Recent Uploads</h2>
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="border-bottom: 2px solid var(--ring);">
+                        <th style="padding: 1rem; text-align: left;">Title</th>
+                        <th style="padding: 1rem; text-align: left;">Lesson</th>
+                        <th style="padding: 1rem; text-align: left;">Type</th>
+                        <th style="padding: 1rem; text-align: left;">Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for resource in recent_uploads %}
+                    <tr style="border-bottom: 1px solid var(--ring);">
+                        <td style="padding: 1rem;">{{ resource.title }}</td>
+                        <td style="padding: 1rem;">{{ resource.lesson.title }}</td>
+                        <td style="padding: 1rem;">{{ resource.get_kind_display }}</td>
+                        <td style="padding: 1rem;">{{ resource.created_at|date:"Y-m-d" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" style="padding: 2rem; text-align: center; color: var(--muted);">
+                            No uploads yet
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <script>
+        const coursesData = {{ courses|safe }};
+        
+        function loadLessons() {
+            const courseId = document.getElementById('courseSelect').value;
+            const lessonSelect = document.getElementById('lessonSelect');
+            lessonSelect.innerHTML = '<option value="">-- Select Lesson --</option>';
+            
+            if (!courseId) return;
+            
+            // Find course lessons
+            const course = coursesData.find(c => c.id === courseId);
+            if (course && course.lessons) {
+                course.lessons.forEach(lesson => {
+                    const option = document.createElement('option');
+                    option.value = lesson.id;
+                    option.textContent = lesson.title;
+                    lessonSelect.appendChild(option);
+                });
+            }
+        }
+    </script>
+</body>
+</html>

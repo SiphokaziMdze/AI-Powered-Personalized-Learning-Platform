@@ -14,33 +14,22 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 Django settings for core project.
 """
-#backend/core/settings.py
-
 from pathlib import Path
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
-# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure--abxfx8ir9e_%&uf%-n5@1mz1o*u1$&^8bkc-$&-&6lce-$&4j'
-
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+ALLOWED_HOSTS = ['*']
 
-ALLOWED_HOSTS = []
-
-# CSRF_TRUSTED_ORIGINS = ["http://127.0.0.1", "http://localhost"]
-
-# Application definition
 INSTALLED_APPS = [
-    'frontend',  
-    'learning',  
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'frontend',
+    'learning',
 ]
 
 MIDDLEWARE = [
@@ -55,7 +44,6 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'core.urls'
 
-# ✅ ADD TEMPLATE DIRS FOR YOUR FRONTEND
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -63,6 +51,7 @@ TEMPLATES = [
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+                'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
@@ -73,7 +62,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'core.wsgi.application'
 
-# Database
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -81,42 +69,36 @@ DATABASES = {
     }
 }
 
-# Password validation
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-# Internationalization
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
-# Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
-# STATIC FILES DIRECTORIES
-STATICFILES_DIRS = [
-    BASE_DIR.parent / "frontend" / "static"  # CSS/JS files
-]
+STATICFILES_DIRS = [BASE_DIR.parent / "frontend" / "static"]
 
-# Media (user uploads like PDFs)
 MEDIA_URL = "/media/"
-MEDIA_ROOT = BASE_DIR.parent / "media" 
+MEDIA_ROOT = BASE_DIR.parent / "media"
 
-# Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-LOGIN_URL = "frontend:login"
+# Login settings - redirect to home page where modals handle auth
+LOGIN_URL = '/'
+LOGIN_REDIRECT_URL = '/dashboard/'
+LOGOUT_REDIRECT_URL = '/'
+
+LOGIN_URL = "frontend:home"
 LOGIN_REDIRECT_URL = "frontend:dashboard"
 LOGOUT_REDIRECT_URL = "frontend:home"
+
+# Login settings
+#LOGIN_URL = '/' 
+#LOGIN_REDIRECT_URL = '/dashboard/'
+#LOGOUT_REDIRECT_URL = '/'

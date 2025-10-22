@@ -150,7 +150,7 @@ class UserProfile(models.Model):
     birth_date = models.DateField(null=True, blank=True)
     avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
     study_streak = models.PositiveIntegerField(default=0)
-    total_study_time = models.DurationField(default='00:00:00')
+    total_study_time = models.DurationField(default=timedelta(0))
     preferred_learning_style = models.CharField(max_length=50, blank=True)
     timezone = models.CharField(max_length=50, default='UTC')
     notifications_enabled = models.BooleanField(default=True)

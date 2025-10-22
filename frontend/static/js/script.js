@@ -1,354 +1,381 @@
-// ===============================
-// OS2 Learn – Frontend Controller
-// ===============================
-class OS2LearnApp {
-  constructor() {
-    this.currentUser = null;
-    this.init();
-  }
+// frontend/static/js/script.js - COMPLETELY FIXED
 
-  init() {
-    this.setupEventListeners();
-    this.setupScrollEffects();
-    this.animateProgressRings();
-    this.setupFloatingCards();
-  }
-
-  // -------------------------
-  // CSRF helpers (for Django)
-  // -------------------------
-  getCSRFToken() {
-    // 1) Try cookie
-    const getCookie = (name) => {
-      const value = `; ${document.cookie}`;
-      const parts = value.split(`; ${name}=`);
-      if (parts.length === 2) return parts.pop().split(';').shift();
-      return null;
-    };
-    const cookieToken = getCookie('csrftoken');
-    if (cookieToken) return cookieToken;
-
-    // 2) Try meta tag <meta name="csrf-token" content="...">
-    const meta = document.querySelector('meta[name="csrf-token"]');
-    if (meta?.content) return meta.content;
-
-    // 3) As a last resort, try hidden input in a visible form
-    const hidden = document.querySelector('input[name="csrfmiddlewaretoken"]');
-    return hidden?.value || '';
-  }
-
-  // ---------------
-  // Event listeners
-  // ---------------
-  setupEventListeners() {
-    const $ = (s) => document.getElementById(s);
-
-    // Nav buttons
-    $('loginBtn')?.addEventListener('click', () => this.openModal('login'));
-    $('signupBtn')?.addEventListener('click', () => this.openModal('signup'));
-
-    // Hero buttons
-    $('getStartedBtn')?.addEventListener('click', () => this.openModal('signup'));
-    $('learnMoreBtn')?.addEventListener('click', () => this.scrollToSection('features'));
-    $('startLearningBtn')?.addEventListener('click', () => this.openModal('signup'));
-
-    // Modals
-    $('closeLogin')?.addEventListener('click', () => this.closeModal());
-    $('closeSignup')?.addEventListener('click', () => this.closeModal());
-    const overlay = $('modalOverlay');
-    overlay?.addEventListener('click', (e) => {
-      if (e.target === overlay) this.closeModal();
-    });
-
-    // Switch modals
-    $('switchToSignup')?.addEventListener('click', (e) => {
-      e.preventDefault(); this.switchModal('signup');
-    });
-    $('switchToLogin')?.addEventListener('click', (e) => {
-      e.preventDefault(); this.switchModal('login');
-    });
-
-    // Forms
-    $('loginForm')?.addEventListener('submit', (e) => this.handleLogin(e));
-    $('signupForm')?.addEventListener('submit', (e) => this.handleSignup(e));
-
-    // ESC closes modal
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') this.closeModal();
-    });
-
-    // Feature cards preview
-    this.setupFeatureCardEffects();
-
-    // CTA micro-animation
-    document.querySelectorAll('.btn-hero-primary, .btn-hero-secondary, .btn-cta-primary').forEach((btn) => {
-      btn.addEventListener('mouseenter', () => {
-        btn.style.transition = 'transform .2s ease';
-        btn.style.transform = 'translateY(-2px) scale(1.02)';
-      });
-      btn.addEventListener('mouseleave', () => {
-        btn.style.transform = 'translateY(0) scale(1)';
-      });
-    });
-
-    console.log('🚀 OS2 Learn initialized');
-  }
-
-  setupFeatureCardEffects() {
-    document.querySelectorAll('.feature-card, .topic-card').forEach((card) => {
-      card.addEventListener('click', () => {
-        this.showNotification('info', 'Feature Preview', 'This feature will be available after registration!');
-      });
-    });
-  }
-
-  // -------
-  // Modals
-  // -------
-  openModal(type) {
-    const overlay = document.getElementById('modalOverlay');
+// ============ Wait for DOM to be fully loaded ============
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('EduCore AI - Script loaded successfully! 🎓');
+    
+    // ============ Modal Elements ============
+    const modalOverlay = document.getElementById('modalOverlay');
     const loginModal = document.getElementById('loginModal');
     const signupModal = document.getElementById('signupModal');
-    if (!overlay || !loginModal || !signupModal) return;
 
-    overlay.classList.add('show');
-    overlay.removeAttribute('hidden');
-    overlay.setAttribute('aria-hidden', 'false');
-    document.body.style.overflow = 'hidden';
-
-    if (type === 'login') {
-      loginModal.style.display = 'block';
-      signupModal.style.display = 'none';
-      loginModal.setAttribute('aria-hidden', 'false');
-      signupModal.setAttribute('aria-hidden', 'true');
-      setTimeout(() => document.getElementById('loginEmail')?.focus(), 250);
-    } else {
-      signupModal.style.display = 'block';
-      loginModal.style.display = 'none';
-      signupModal.setAttribute('aria-hidden', 'false');
-      loginModal.setAttribute('aria-hidden', 'true');
-      setTimeout(() => document.getElementById('firstName')?.focus(), 250);
-    }
-  }
-
-  closeModal() {
-    const overlay = document.getElementById('modalOverlay');
-    const loginModal = document.getElementById('loginModal');
-    const signupModal = document.getElementById('signupModal');
-    if (!overlay) return;
-
-    overlay.classList.remove('show');
-    overlay.setAttribute('hidden', '');
-    overlay.setAttribute('aria-hidden', 'true');
-    document.body.style.overflow = '';
-
-    if (loginModal) { loginModal.style.display = 'none'; loginModal.setAttribute('aria-hidden', 'true'); }
-    if (signupModal) { signupModal.style.display = 'none'; signupModal.setAttribute('aria-hidden', 'true'); }
-
-    document.getElementById('loginForm')?.reset();
-    document.getElementById('signupForm')?.reset();
-  }
-
-  switchModal(type) {
-    this.closeModal();
-    setTimeout(() => this.openModal(type), 200);
-  }
-
-  // --------------
-  // Form Handlers
-  // --------------
-  handleLogin(e) {
-    e.preventDefault();
-    const form = e.target;
-    const submitBtn = form.querySelector('button[type="submit"]');
-    const originalText = submitBtn?.innerHTML || '';
-    if (submitBtn) { submitBtn.innerHTML = '<div class="loading"></div> Signing in...'; submitBtn.disabled = true; }
-
-    const formData = new FormData(form);
-    const csrf = this.getCSRFToken();
-
-    fetch('/api/login/', {
-      method: 'POST',
-      body: formData,               // uses multipart/form-data
-      headers: { 'X-CSRFToken': csrf, 'Accept': 'application/json' },
-      credentials: 'same-origin',
-    })
-      .then(r => r.json())
-      .then(data => {
-        if (data?.success) {
-          this.showNotification('success', 'Welcome Back!', `Hello ${data.user?.first_name || ''}! Redirecting...`);
-          setTimeout(() => { window.location.href = '/dashboard/'; }, 1200);
-        } else {
-          this.showNotification('error', 'Login Failed', data?.message || 'Invalid credentials.');
-          this.resetSubmitButton(submitBtn, originalText);
-        }
-      })
-      .catch(err => {
-        console.error('Login error:', err);
-        this.showNotification('error', 'Login Error', 'Something went wrong. Please try again.');
-        this.resetSubmitButton(submitBtn, originalText);
-      });
-  }
-
-  handleSignup(e) {
-    e.preventDefault();
-    const form = e.target;
-    const submitBtn = form.querySelector('button[type="submit"]');
-    const originalText = submitBtn?.innerHTML || '';
-    if (submitBtn) { submitBtn.innerHTML = '<div class="loading"></div> Creating account...'; submitBtn.disabled = true; }
-
-    const formData = new FormData(form);
-    const password = (formData.get('password') || '').toString();
-    const confirm = (formData.get('confirmPassword') || '').toString();
-
-    if (password !== confirm) {
-      this.showNotification('error', 'Password Mismatch', 'Passwords do not match.');
-      return this.resetSubmitButton(submitBtn, originalText);
-    }
-    if (password.length < 6) {
-      this.showNotification('error', 'Weak Password', 'Password must be at least 6 characters.');
-      return this.resetSubmitButton(submitBtn, originalText);
+    // Check if modals exist
+    if (!modalOverlay || !loginModal || !signupModal) {
+        console.log('Modals not found on this page');
+        return;
     }
 
-    const csrf = this.getCSRFToken();
+    // ============ Modal Functions ============
+    function showModal(modal) {
+        if (!modal || !modalOverlay) return;
+        
+        modalOverlay.hidden = false;
+        modalOverlay.style.display = 'flex';
+        modal.setAttribute('aria-hidden', 'false');
+        modal.style.display = 'block';
+        document.body.style.overflow = 'hidden';
+    }
 
-    fetch('/api/signup/', {
-      method: 'POST',
-      body: formData,               // uses multipart/form-data
-      headers: { 'X-CSRFToken': csrf, 'Accept': 'application/json' },
-      credentials: 'same-origin',
-    })
-      .then(r => r.json())
-      .then(data => {
-        if (data?.success) {
-          this.showNotification('success', 'Account Created!', `Welcome ${data.user?.first_name || ''}! Redirecting...`);
-          setTimeout(() => { window.location.href = '/dashboard/'; }, 1200);
-        } else {
-          this.showNotification('error', 'Registration Failed', data?.message || 'Please try again.');
-          this.resetSubmitButton(submitBtn, originalText);
+    function hideModal(modal) {
+        if (!modal || !modalOverlay) return;
+        
+        modal.setAttribute('aria-hidden', 'true');
+        modal.style.display = 'none';
+        modalOverlay.hidden = true;
+        modalOverlay.style.display = 'none';
+        document.body.style.overflow = '';
+    }
+
+    function hideAllModals() {
+        hideModal(loginModal);
+        hideModal(signupModal);
+    }
+
+    // ============ Button Event Listeners ============
+    const loginBtn = document.getElementById('loginBtn');
+    const signupBtn = document.getElementById('signupBtn');
+    const getStartedBtn = document.getElementById('getStartedBtn');
+    const startLearningBtn = document.getElementById('startLearningBtn');
+
+    if (loginBtn) {
+        loginBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            hideAllModals();
+            showModal(loginModal);
+        });
+    }
+
+    if (signupBtn) {
+        signupBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            hideAllModals();
+            showModal(signupModal);
+        });
+    }
+
+    if (getStartedBtn) {
+        getStartedBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            hideAllModals();
+            showModal(signupModal);
+        });
+    }
+
+    if (startLearningBtn) {
+        startLearningBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            hideAllModals();
+            showModal(signupModal);
+        });
+    }
+
+    // ============ Close Button Listeners ============
+    const closeLogin = document.getElementById('closeLogin');
+    const closeSignup = document.getElementById('closeSignup');
+
+    if (closeLogin) {
+        closeLogin.addEventListener('click', function(e) {
+            e.preventDefault();
+            hideModal(loginModal);
+        });
+    }
+
+    if (closeSignup) {
+        closeSignup.addEventListener('click', function(e) {
+            e.preventDefault();
+            hideModal(signupModal);
+        });
+    }
+
+    // ============ Switch Between Modals ============
+    const switchToSignup = document.getElementById('switchToSignup');
+    const switchToLogin = document.getElementById('switchToLogin');
+
+    if (switchToSignup) {
+        switchToSignup.addEventListener('click', function(e) {
+            e.preventDefault();
+            hideModal(loginModal);
+            showModal(signupModal);
+        });
+    }
+
+    if (switchToLogin) {
+        switchToLogin.addEventListener('click', function(e) {
+            e.preventDefault();
+            hideModal(signupModal);
+            showModal(loginModal);
+        });
+    }
+
+    // ============ Close modal when clicking overlay ============
+    if (modalOverlay) {
+        modalOverlay.addEventListener('click', function(e) {
+            if (e.target === modalOverlay) {
+                hideAllModals();
+            }
+        });
+    }
+
+    // ============ Keyboard Navigation ============
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            hideAllModals();
         }
-      })
-      .catch(err => {
-        console.error('Signup error:', err);
-        this.showNotification('error', 'Registration Error', 'Something went wrong. Please try again.');
-        this.resetSubmitButton(submitBtn, originalText);
-      });
-  }
-
-  resetSubmitButton(btn, originalText) {
-    if (btn) { btn.innerHTML = originalText; btn.disabled = false; }
-  }
-
-  // --------------
-  // Notifications
-  // --------------
-  showNotification(type, title, message) {
-    const container = document.getElementById('notificationContainer');
-    if (!container) return;
-
-    const icons = { success: '✅', error: '❌', info: '💡' };
-    const n = document.createElement('div');
-    n.className = `toast ${type}`;
-    n.innerHTML = `
-      <div style="display:flex;align-items:center;gap:8px;">
-        <span>${icons[type] || 'ℹ️'}</span>
-        <div>
-          <strong>${title}</strong><br>
-          <small>${message}</small>
-        </div>
-        <button aria-label="Close" style="margin-left:auto;background:none;border:none;color:var(--muted);cursor:pointer;">&times;</button>
-      </div>
-    `;
-    n.querySelector('button')?.addEventListener('click', () => n.remove());
-    container.appendChild(n);
-    setTimeout(() => n.remove(), 5000);
-  }
-
-  // -----------------
-  // Scroll / Animations
-  // -----------------
-  setupScrollEffects() {
-    const navbar = document.querySelector('.navbar');
-    window.addEventListener('scroll', () => {
-      navbar?.classList.toggle('scrolled', window.scrollY > 100);
     });
 
-    // Fade/slide in for cards
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.style.opacity = '1';
-          entry.target.style.transform = 'translateY(0)';
+    // ============ Notification System ============
+    window.showNotification = function(type, title, message) {
+        const container = document.getElementById('notificationContainer');
+        if (!container) {
+            console.log('Notification container not found');
+            return;
         }
-      });
-    }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
 
-    document.querySelectorAll('.feature-card, .topic-card').forEach((card) => {
-      card.style.opacity = '0';
-      card.style.transform = 'translateY(30px)';
-      card.style.transition = 'opacity .6s ease, transform .6s ease';
-      observer.observe(card);
-    });
-  }
+        const notification = document.createElement('div');
+        notification.className = `toast ${type}`;
+        
+        const icons = {
+            success: '✅',
+            error: '❌',
+            info: '💡',
+            warning: '⚠️'
+        };
 
-  scrollToSection(sectionClass) {
-    document.querySelector(`.${sectionClass}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
+        notification.innerHTML = `
+            <div class="toast-content">
+                <span class="toast-icon">${icons[type] || icons.info}</span>
+                <div class="toast-text">
+                    <strong>${title}</strong>
+                    <p>${message}</p>
+                </div>
+                <button class="toast-close" onclick="this.parentElement.parentElement.remove()">×</button>
+            </div>
+        `;
 
-  animateProgressRings() {
-    const rings = document.querySelectorAll('.progress-ring-circle');
-    rings.forEach((ring, i) => {
-      setTimeout(() => {
-        // trigger CSS transition only if value exists
-        const off = ring.style.strokeDashoffset;
-        if (typeof off === 'string' && off.length > 0) {
-          ring.style.strokeDashoffset = off;
-        }
-      }, i * 200);
-    });
-  }
-
-  setupFloatingCards() {
-    const cards = document.querySelectorAll('.floating-card');
-
-    // Hover effect
-    cards.forEach((card) => {
-      card.addEventListener('mouseenter', () => {
-        card.style.transition = 'transform .3s ease';
-        card.style.transform = 'scale(1.05) translateY(-10px)';
-      });
-      card.addEventListener('mouseleave', () => {
-        card.style.transform = 'scale(1) translateY(0)';
-      });
-      card.addEventListener('click', () => {
-        this.showNotification('info', 'Feature Preview', 'This interactive feature will be available in the full version!');
-      });
-    });
-
-    // Parallax (compute fresh transform; don’t append)
-    const onScroll = () => {
-      const scrolled = window.pageYOffset;
-      cards.forEach((card) => {
-        // If hovered, keep the hover transform
-        if (card.matches(':hover')) return;
-        const offset = scrolled * -0.2;
-        card.style.transform = `translateY(${offset}px)`;
-      });
+        container.appendChild(notification);
+        
+        // Auto remove after 5 seconds
+        setTimeout(() => {
+            notification.style.opacity = '0';
+            setTimeout(() => notification.remove(), 300);
+        }, 5000);
     };
-    window.addEventListener('scroll', this.debounce(onScroll, 10));
-  }
 
-  // Utilities
-  debounce(fn, wait) {
-    let t;
-    return (...args) => {
-      clearTimeout(t);
-      t = setTimeout(() => fn(...args), wait);
-    };
-  }
-}
+    // ============ Get CSRF Token ============
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
 
-// Boot
-document.addEventListener('DOMContentLoaded', () => {
-  window.os2LearnApp = new OS2LearnApp();
+    // ============ Login Form Handler ============
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) {
+        loginForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            
+            // Validation
+            if (!email || !password) {
+                showNotification('error', 'Login Failed', 'Please fill in all fields');
+                return;
+            }
+
+            // Disable button during request
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Signing in...';
+
+            try {
+                const response = await fetch('/api/login/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        password: password
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showNotification('success', 'Login Successful', data.message);
+                    setTimeout(() => {
+                        window.location.href = data.redirect;
+                    }, 500);
+                } else {
+                    showNotification('error', 'Login Failed', data.message);
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalText;
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showNotification('error', 'Error', 'An error occurred during login. Please try again.');
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            }
+        });
+    }
+
+    // ============ Signup Form Handler ============
+    const signupForm = document.getElementById('signupForm');
+    if (signupForm) {
+        signupForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            
+            const firstName = document.getElementById('firstName').value.trim();
+            const lastName = document.getElementById('lastName').value.trim();
+            const email = document.getElementById('signupEmail').value.trim();
+            const password = document.getElementById('signupPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const termsAccept = document.getElementById('termsAccept').checked;
+            
+            // Validation
+            if (!firstName || !lastName || !email || !password || !confirmPassword) {
+                showNotification('error', 'Registration Failed', 'Please fill in all fields');
+                return;
+            }
+
+            if (!termsAccept) {
+                showNotification('error', 'Registration Failed', 'Please accept the Terms of Service');
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                showNotification('error', 'Registration Failed', 'Passwords do not match');
+                return;
+            }
+
+            if (password.length < 8) {
+                showNotification('error', 'Registration Failed', 'Password must be at least 8 characters long');
+                return;
+            }
+
+            // Email validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                showNotification('error', 'Registration Failed', 'Please enter a valid email address');
+                return;
+            }
+
+            // Disable button during request
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Creating account...';
+
+            try {
+                const response = await fetch('/api/signup/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({
+                        firstName: firstName,
+                        lastName: lastName,
+                        email: email,
+                        password: password,
+                        confirmPassword: confirmPassword
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showNotification('success', 'Registration Successful', data.message);
+                    setTimeout(() => {
+                        window.location.href = data.redirect;
+                    }, 500);
+                } else {
+                    showNotification('error', 'Registration Failed', data.message);
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalText;
+                }
+            } catch (error) {
+                console.error('Signup error:', error);
+                showNotification('error', 'Error', 'An error occurred during registration. Please try again.');
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            }
+        });
+    }
+
+    // ============ Learn More Button ============
+    const learnMoreBtn = document.getElementById('learnMoreBtn');
+    if (learnMoreBtn) {
+        learnMoreBtn.addEventListener('click', function() {
+            const features = document.querySelector('.features');
+            if (features) {
+                features.scrollIntoView({ 
+                    behavior: 'smooth' 
+                });
+            }
+        });
+    }
+
+    // ============ Form Input Enhancement ============
+    document.querySelectorAll('input[type="email"]').forEach(input => {
+        input.addEventListener('blur', function() {
+            const email = this.value.trim();
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            
+            if (email && !emailRegex.test(email)) {
+                this.setCustomValidity('Please enter a valid email address');
+                this.reportValidity();
+            } else {
+                this.setCustomValidity('');
+            }
+        });
+    });
+
+    // ============ Password Strength Indicator ============
+    const signupPassword = document.getElementById('signupPassword');
+    if (signupPassword) {
+        signupPassword.addEventListener('input', function() {
+            const password = this.value;
+            const strength = getPasswordStrength(password);
+            console.log('Password strength:', strength);
+            // You can add visual feedback here
+        });
+    }
+
+    function getPasswordStrength(password) {
+        let strength = 0;
+        
+        if (password.length >= 8) strength++;
+        if (password.length >= 12) strength++;
+        if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++;
+        if (/\d/.test(password)) strength++;
+        if (/[^a-zA-Z0-9]/.test(password)) strength++;
+        
+        return strength;
+    }
 });

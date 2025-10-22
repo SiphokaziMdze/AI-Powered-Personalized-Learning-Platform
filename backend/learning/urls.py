@@ -19,10 +19,10 @@ urlpatterns = [
     path('admin/bulk-upload/', views.bulk_upload_view, name='bulk_upload'),
     path('admin/generate-sample/', views.generate_sample_content, name='generate_sample'),
     path('admin/preview/<uuid:resource_id>/', views.preview_content, name='preview_content'),
+    path('admin/upload/', views.content_upload, name='content_upload'),
     
-    # AI Features (placeholders for now)
+
     path('ai/dashboard/', views.ai_dashboard, name='ai_dashboard'),
     path('ai/tutor/', views.ai_chatbot, name='ai_chatbot'),
-    path('ai/chat/message/', views.chat_message, name='chat_message'),
-    path('ai/chat/conversation/<uuid:conversation_id>/', views.get_conversation, name='get_conversation'),
+    
 ]

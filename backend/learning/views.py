@@ -9,9 +9,13 @@ from django.db.models import Avg, Count, Q
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from datetime import timedelta
+from django.core.files.storage import FileSystemStorage
+from django.conf import settings
+from .ai_engine import AILearningEngine
 from .models import *
 from .forms import *
 import json
+import os
 
 # ============ PUBLIC/STUDENT VIEWS ============
 
@@ -305,28 +309,334 @@ def preview_content(request, resource_id):
         'resource': resource
     })
 
-# Placeholder for AI chatbot views
-@login_required
-def ai_chatbot(request):
-    """AI Chatbot - Coming soon"""
-    return render(request, 'learning/ai_chatbot_placeholder.html', {
-        'title': 'AI Tutor - Coming Soon'
-    })
+@staff_member_required
+def content_upload(request):
+    """Upload content files (PDFs, videos, images, etc.)"""
+    if request.method == 'POST':
+        try:
+            lesson_id = request.POST.get('lesson_id')
+            title = request.POST.get('title', '').strip()
+            resource_type = request.POST.get('resource_type', 'note')
+            description = request.POST.get('description', '').strip()
+            
+            if not lesson_id or not title:
+                messages.error(request, 'Lesson and title are required')
+                return redirect('learning:content_upload')
+            
+            lesson = get_object_or_404(Lesson, id=lesson_id)
+            
+            # Handle file upload
+            if 'file' in request.FILES:
+                uploaded_file = request.FILES['file']
+                
+                # Create resource
+                resource = Resource.objects.create(
+                    lesson=lesson,
+                    title=title,
+                    kind=resource_type,
+                    content=description,
+                    file=uploaded_file
+                )
+                
+                messages.success(request, f'File "{uploaded_file.name}" uploaded successfully!')
+            
+            # Handle URL
+            elif 'url' in request.POST and request.POST['url']:
+                url = request.POST['url'].strip()
+                resource = Resource.objects.create(
+                    lesson=lesson,
+                    title=title,
+                    kind=resource_type,
+                    content=description,
+                    url=url
+                )
+                messages.success(request, f'URL resource created successfully!')
+            
+            # Handle text content
+            else:
+                resource = Resource.objects.create(
+                    lesson=lesson,
+                    title=title,
+                    kind=resource_type,
+                    content=description
+                )
+                messages.success(request, f'Text resource created successfully!')
+            
+            return redirect('learning:content_upload')
+            
+        except Exception as e:
+            messages.error(request, f'Error uploading content: {str(e)}')
+            return redirect('learning:content_upload')
+    
+    # GET request - show upload form
+    courses = Course.objects.all().prefetch_related('lessons')
+    recent_uploads = Resource.objects.select_related(
+        'lesson', 'lesson__course'
+    ).order_by('-created_at')[:10]
+    
+    context = {
+        'title': 'Content Upload',
+        'courses': courses,
+        'recent_uploads': recent_uploads,
+    }
+    return render(request, 'learning/admin/content_upload.html', context)
 
-@login_required
-def chat_message(request):
-    """Chat message API - Coming soon"""
-    return JsonResponse({'error': 'AI Chatbot coming soon'}, status=501)
-
-@login_required
-def get_conversation(request, conversation_id):
-    """Get conversation - Coming soon"""
-    return JsonResponse({'error': 'AI Chatbot coming soon'}, status=501)
-
-# Add this placeholder view for ai_dashboard
 @login_required
 def ai_dashboard(request):
-    """AI Dashboard - Coming soon"""
-    return render(request, 'learning/ai_dashboard_placeholder.html', {
-        'title': 'AI Dashboard - Coming Soon'
-    })
+    """AI-powered analytics dashboard"""
+    ai_engine = AILearningEngine(request.user)
+    
+    # Get overall performance
+    overall_performance = ai_engine.analyze_performance()
+    
+    # Get course-specific performance
+    courses = Course.objects.filter(is_published=True)
+    course_analytics = []
+    
+    for course in courses:
+        perf = ai_engine.analyze_performance(course)
+        difficulty = ai_engine.get_difficulty_level(course)
+        
+        course_analytics.append({
+            'course': course,
+            'performance': perf,
+            'difficulty_level': difficulty,
+            'predicted_completion': ai_engine.predict_time_to_complete(
+                course.lessons.first()
+            ) if course.lessons.exists() else 30
+        })
+    
+    # Get learning insights
+    insights = ai_engine.get_learning_insights()
+    
+    # Generate recommendations
+    recommendations = ai_engine.generate_recommendations()
+    
+    context = {
+        'title': 'AI Analytics Dashboard',
+        'overall_performance': overall_performance,
+        'course_analytics': course_analytics,
+        'insights': insights,
+        'recommendations': recommendations,
+        'difficulty_suggestions': {
+            'current': ai_engine.get_difficulty_level(),
+            'description': 'Your content is automatically adjusted to your performance'
+        }
+    }
+    
+    return render(request, 'learning/ai_dashboard.html', context)
+
+
+@login_required
+def adaptive_quiz_view(request, quiz_id):
+    """Adaptive quiz that adjusts based on performance"""
+    quiz = get_object_or_404(Quiz, id=quiz_id)
+    ai_engine = AILearningEngine(request.user)
+    
+    # Get adaptive questions
+    adaptive_questions = ai_engine.get_adaptive_quiz_questions(quiz)
+    
+    if request.method == 'POST':
+        # Process quiz submission
+        score = 0
+        total_points = 0
+        
+        for question in adaptive_questions:
+            total_points += question.points
+            selected_choice = request.POST.get(f'question_{question.id}')
+            
+            if selected_choice:
+                choice = Choice.objects.filter(
+                    id=selected_choice,
+                    is_correct=True
+                ).first()
+                
+                if choice:
+                    score += question.points
+        
+        # Calculate percentage
+        percentage = (score / total_points * 100) if total_points > 0 else 0
+        
+        # Save attempt
+        attempt = QuizAttempt.objects.create(
+            user=request.user,
+            quiz=quiz,
+            score=percentage,
+            time_taken=timedelta(minutes=10),  # Track actual time in production
+            is_passed=percentage >= quiz.pass_score
+        )
+        
+        # Update progress
+        progress, _ = UserProgress.objects.get_or_create(
+            user=request.user,
+            course=quiz.lesson.course,
+            lesson=quiz.lesson
+        )
+        progress.completion_percentage = min(progress.completion_percentage + 10, 100)
+        progress.is_completed = progress.completion_percentage >= 100
+        progress.save()
+        
+        # Generate new recommendations based on performance
+        ai_engine.generate_recommendations(quiz.lesson.course)
+        
+        messages.success(
+            request,
+            f'Quiz completed! Score: {percentage:.1f}%. '
+            f'Difficulty will be adjusted for next quiz.'
+        )
+        return redirect('learning:lesson_detail', lesson_id=quiz.lesson.id)
+    
+    context = {
+        'title': f'{quiz.title} - Adaptive Quiz',
+        'quiz': quiz,
+        'questions': adaptive_questions,
+        'difficulty_level': ai_engine.get_difficulty_level(quiz.lesson.course),
+    }
+    
+    return render(request, 'learning/adaptive_quiz.html', context)
+
+
+@staff_member_required
+def content_upload(request):
+    """Upload content files (PDFs, videos, images, etc.)"""
+    if request.method == 'POST':
+        try:
+            lesson_id = request.POST.get('lesson_id')
+            title = request.POST.get('title', '').strip()
+            resource_type = request.POST.get('resource_type', 'note')
+            description = request.POST.get('description', '').strip()
+            
+            if not lesson_id or not title:
+                messages.error(request, 'Lesson and title are required')
+                return redirect('learning:content_upload')
+            
+            lesson = get_object_or_404(Lesson, id=lesson_id)
+            
+            # Handle file upload
+            if 'file' in request.FILES:
+                uploaded_file = request.FILES['file']
+                
+                # Create resource
+                resource = Resource.objects.create(
+                    lesson=lesson,
+                    title=title,
+                    kind=resource_type,
+                    content=description,
+                    file=uploaded_file
+                )
+                
+                messages.success(request, f'File "{uploaded_file.name}" uploaded successfully!')
+            
+            # Handle URL
+            elif 'url' in request.POST and request.POST['url']:
+                url = request.POST['url'].strip()
+                resource = Resource.objects.create(
+                    lesson=lesson,
+                    title=title,
+                    kind=resource_type,
+                    content=description,
+                    url=url
+                )
+                messages.success(request, f'URL resource created successfully!')
+            
+            # Handle text content
+            else:
+                resource = Resource.objects.create(
+                    lesson=lesson,
+                    title=title,
+                    kind=resource_type,
+                    content=description
+                )
+                messages.success(request, f'Text resource created successfully!')
+            
+            return redirect('learning:content_upload')
+            
+        except Exception as e:
+            messages.error(request, f'Error uploading content: {str(e)}')
+            return redirect('learning:content_upload')
+    
+    # GET request - show upload form
+    courses = Course.objects.all().prefetch_related('lessons')
+    recent_uploads = Resource.objects.select_related(
+        'lesson', 'lesson__course'
+    ).order_by('-created_at')[:10]
+    
+    context = {
+        'title': 'Content Upload',
+        'courses': courses,
+        'recent_uploads': recent_uploads,
+    }
+    return render(request, 'learning/admin/content_upload.html', context)
+
+
+@login_required
+@csrf_exempt
+def ai_chatbot(request):
+    """AI Tutor chatbot for personalized help"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            message = data.get('message', '').strip()
+            
+            if not message:
+                return JsonResponse({'error': 'Message required'}, status=400)
+            
+            # AI Engine for context
+            ai_engine = AILearningEngine(request.user)
+            performance = ai_engine.analyze_performance()
+            
+            # Simple rule-based responses (replace with actual AI/LLM in production)
+            response = generate_ai_response(message, performance)
+            
+            return JsonResponse({
+                'response': response,
+                'suggestions': get_ai_suggestions(message)
+            })
+            
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+    
+    context = {
+        'title': 'AI Tutor - Get Help'
+    }
+    return render(request, 'learning/ai_chatbot.html', context)
+
+
+def generate_ai_response(message, performance):
+    """Generate AI tutor response based on message and performance"""
+    message_lower = message.lower()
+    
+    # Context-aware responses
+    if 'help' in message_lower or 'stuck' in message_lower:
+        if performance['level'] == 'beginner':
+            return "I see you're just starting out. Let me break this down into simpler steps. What specific topic are you struggling with?"
+        else:
+            return "I'm here to help! Based on your progress, you're doing well overall. What specifically can I clarify for you?"
+    
+    elif 'quiz' in message_lower or 'test' in message_lower:
+        return f"Your current quiz performance is {performance['avg_score']:.1f}%. Would you like me to recommend practice materials or explain concepts you found challenging?"
+    
+    elif 'recommend' in message_lower or 'next' in message_lower:
+        if performance['completion_rate'] < 30:
+            return "I recommend focusing on completing your current lessons before moving forward. Shall I help you with any specific topic?"
+        else:
+            return "Based on your progress, you're ready for more advanced topics! Would you like to explore process synchronization or memory management next?"
+    
+    elif 'os' in message_lower or 'operating' in message_lower:
+        return "Operating Systems is a fascinating subject! Are you working on process management, memory systems, or file operations?"
+    
+    elif 'database' in message_lower or 'sql' in message_lower:
+        return "Database concepts can be tricky! Are you learning about SQL queries, normalization, or transaction management?"
+    
+    else:
+        return "I'm your AI tutor! I can help with course recommendations, explain concepts, provide study tips, and answer questions about Operating Systems and Database Systems. What would you like to know?"
+
+
+def get_ai_suggestions(message):
+    """Get suggested follow-up questions"""
+    return [
+        "What topics should I focus on next?",
+        "Explain this concept in simpler terms",
+        "Give me practice exercises",
+        "How can I improve my quiz scores?"
+    ]

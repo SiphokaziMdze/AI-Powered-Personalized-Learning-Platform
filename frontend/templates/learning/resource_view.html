@@ -1,0 +1,308 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <style>
+        .resource-container {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+        
+        .resource-header {
+            background: var(--card);
+            border: 1px solid var(--ring);
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 32px;
+        }
+        
+        .resource-icon-large {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+        
+        .resource-meta {
+            display: flex;
+            gap: 24px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--ring);
+            flex-wrap: wrap;
+        }
+        
+        .resource-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--muted);
+        }
+        
+        .resource-content {
+            background: var(--card);
+            border: 1px solid var(--ring);
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 24px;
+        }
+        
+        .resource-content h2 {
+            margin-top: 24px;
+            margin-bottom: 12px;
+        }
+        
+        .resource-content p {
+            line-height: 1.8;
+            margin-bottom: 16px;
+        }
+        
+        .resource-content pre {
+            background: var(--background);
+            border: 1px solid var(--ring);
+            border-radius: 8px;
+            padding: 16px;
+            overflow-x: auto;
+        }
+        
+        .resource-content code {
+            background: var(--background);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .download-section {
+            background: linear-gradient(135deg, rgba(99,102,241,0.1), rgba(139,92,246,0.1));
+            border: 1px solid var(--ring);
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        
+        .download-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 32px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            border: none;
+            border-radius: 24px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .download-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
+        }
+        
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%; /* 16:9 aspect ratio */
+            height: 0;
+            overflow: hidden;
+            border-radius: 12px;
+            margin-bottom: 24px;
+        }
+        
+        .video-container iframe,
+        .video-container video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        .pdf-viewer {
+            width: 100%;
+            height: 800px;
+            border: 1px solid var(--ring);
+            border-radius: 12px;
+        }
+        
+        .back-button {
+            margin-bottom: 24px;
+        }
+        
+        .external-link-box {
+            background: var(--card);
+            border: 2px dashed var(--ring);
+            border-radius: 12px;
+            padding: 32px;
+            text-align: center;
+        }
+        
+        .external-link-box h3 {
+            margin-bottom: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="resource-container">
+        <div class="back-button">
+            <a href="{% url 'frontend:dashboard' %}" class="btn-secondary">← Back to Dashboard</a>
+        </div>
+        
+        <div class="resource-header">
+            <div class="resource-icon-large">
+                {% if resource.kind == 'video' %}🎥
+                {% elif resource.kind == 'pdf' %}📄
+                {% elif resource.kind == 'code' %}💻
+                {% elif resource.kind == 'image' %}🖼️
+                {% elif resource.kind == 'link' %}🔗
+                {% else %}📖{% endif %}
+            </div>
+            <h1>{{ resource.title }}</h1>
+            <p style="color: var(--muted); margin-top: 8px;">
+                {{ resource.lesson.course.title }} • {{ resource.lesson.title }}
+            </p>
+            
+            <div class="resource-meta">
+                <div class="resource-meta-item">
+                    <span>📁</span>
+                    <span>Type: {{ resource.get_kind_display }}</span>
+                </div>
+                <div class="resource-meta-item">
+                    <span>📅</span>
+                    <span>Added: {{ resource.created_at|date:"M d, Y" }}</span>
+                </div>
+                {% if resource.file %}
+                <div class="resource-meta-item">
+                    <span>💾</span>
+                    <span>Available for download</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        {% if resource.kind == 'video' %}
+            {% if resource.file %}
+                <!-- Local video file -->
+                <div class="video-container">
+                    <video controls>
+                        <source src="{{ resource.file.url }}" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                </div>
+            {% elif resource.url %}
+                <!-- External video (YouTube, Vimeo, etc.) -->
+                <div class="video-container">
+                    {% if 'youtube.com' in resource.url or 'youtu.be' in resource.url %}
+                        {% load static %}
+                        <iframe src="{{ resource.url }}" allowfullscreen></iframe>
+                    {% else %}
+                        <iframe src="{{ resource.url }}" allowfullscreen></iframe>
+                    {% endif %}
+                </div>
+            {% endif %}
+        {% endif %}
+        
+        {% if resource.kind == 'pdf' %}
+            {% if resource.file %}
+                <div class="download-section">
+                    <h3>📄 PDF Document</h3>
+                    <p style="color: var(--muted); margin: 16px 0;">
+                        This resource is available as a PDF document
+                    </p>
+                    <a href="{{ resource.file.url }}" class="download-button" download>
+                        <span>⬇️</span>
+                        <span>Download PDF</span>
+                    </a>
+                    <div style="margin-top: 16px;">
+                        <a href="{{ resource.file.url }}" target="_blank" class="btn-secondary">
+                            View in Browser
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Embed PDF viewer -->
+                <iframe src="{{ resource.file.url }}" class="pdf-viewer"></iframe>
+            {% endif %}
+        {% endif %}
+        
+        {% if resource.kind == 'image' %}
+            {% if resource.file %}
+                <div style="text-align: center; margin-bottom: 24px;">
+                    <img src="{{ resource.file.url }}" 
+                         alt="{{ resource.title }}" 
+                         style="max-width: 100%; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+                </div>
+            {% endif %}
+        {% endif %}
+        
+        {% if resource.kind == 'link' %}
+            <div class="external-link-box">
+                <h3>🔗 External Resource</h3>
+                <p style="color: var(--muted); margin: 16px 0;">
+                    This resource links to an external website
+                </p>
+                <a href="{{ resource.url }}" target="_blank" rel="noopener noreferrer" class="download-button">
+                    <span>🌐</span>
+                    <span>Visit External Link</span>
+                </a>
+                <div style="margin-top: 16px;">
+                    <small style="color: var(--muted); word-break: break-all;">
+                        {{ resource.url }}
+                    </small>
+                </div>
+            </div>
+        {% endif %}
+        
+        {% if resource.kind == 'code' %}
+            {% if resource.file %}
+                <div class="download-section">
+                    <h3>💻 Code File</h3>
+                    <p style="color: var(--muted); margin: 16px 0;">
+                        Download the code file to view or use in your projects
+                    </p>
+                    <a href="{{ resource.file.url }}" class="download-button" download>
+                        <span>⬇️</span>
+                        <span>Download Code</span>
+                    </a>
+                </div>
+            {% endif %}
+        {% endif %}
+        
+        {% if resource.content %}
+            <div class="resource-content">
+                <h2>📝 Description</h2>
+                {{ resource.content|linebreaks }}
+            </div>
+        {% endif %}
+        
+        {% if resource.file and resource.kind not in 'video,pdf,image' %}
+            <div class="download-section">
+                <h3>📦 Download Resource</h3>
+                <p style="color: var(--muted); margin: 16px 0;">
+                    Download this resource to use offline
+                </p>
+                <a href="{{ resource.file.url }}" class="download-button" download>
+                    <span>⬇️</span>
+                    <span>Download File</span>
+                </a>
+            </div>
+        {% endif %}
+        
+        <!-- Action buttons -->
+        <div style="display: flex; gap: 12px; justify-content: center; margin-top: 32px;">
+            <a href="{% url 'learning:lesson_detail' resource.lesson.id %}" class="btn-primary">
+                View Lesson
+            </a>
+            <a href="{% url 'frontend:dashboard' %}" class="btn-secondary">
+                Back to Dashboard
+            </a>
+        </div>
+    </div>
+</body>
+</html>

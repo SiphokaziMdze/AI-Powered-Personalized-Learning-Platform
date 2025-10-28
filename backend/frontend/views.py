@@ -167,6 +167,8 @@ def signup_view(request):
     }
     return render(request, 'signup.html', context)
 
+
+
 def logout_view(request):
     """Logout and redirect"""
     logout(request)

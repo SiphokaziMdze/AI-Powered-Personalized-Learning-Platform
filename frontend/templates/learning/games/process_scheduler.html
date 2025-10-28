@@ -1,0 +1,511 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Process Scheduler - Learning Game</title>
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <style>
+        .game-container {
+            max-width: 1400px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+        
+        .game-header {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            padding: 32px;
+            border-radius: 16px;
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        
+        .algorithm-selector {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+        }
+        
+        .algorithm-btn {
+            padding: 12px 24px;
+            border: 2px solid var(--ring);
+            background: var(--card);
+            color: var(--text);
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .algorithm-btn.active {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            border-color: transparent;
+        }
+        
+        .game-board {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+        
+        @media (max-width: 968px) {
+            .game-board {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .processes-panel {
+            background: var(--card);
+            border: 1px solid var(--ring);
+            border-radius: 16px;
+            padding: 24px;
+        }
+        
+        .process-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 16px;
+        }
+        
+        .process-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: var(--background);
+            border: 2px solid var(--ring);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .process-item.running {
+            border-color: #10b981;
+            background: rgba(16,185,129,0.1);
+        }
+        
+        .process-item.completed {
+            opacity: 0.5;
+            border-color: var(--muted);
+        }
+        
+        .process-color {
+            width: 12px;
+            height: 40px;
+            border-radius: 4px;
+        }
+        
+        .process-info {
+            flex: 1;
+        }
+        
+        .process-name {
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        
+        .process-stats {
+            font-size: 12px;
+            color: var(--muted);
+        }
+        
+        .timeline-panel {
+            background: var(--card);
+            border: 1px solid var(--ring);
+            border-radius: 16px;
+            padding: 24px;
+        }
+        
+        .timeline {
+            margin-top: 24px;
+            min-height: 80px;
+            background: var(--background);
+            border-radius: 8px;
+            padding: 16px;
+            display: flex;
+            gap: 2px;
+            flex-wrap: wrap;
+        }
+        
+        .timeline-block {
+            height: 48px;
+            min-width: 40px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 12px;
+            color: white;
+            animation: slideIn 0.3s ease;
+        }
+        
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-top: 24px;
+        }
+        
+        .metric-card {
+            background: rgba(99,102,241,0.1);
+            border: 1px solid rgba(99,102,241,0.3);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+        }
+        
+        .metric-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--accent);
+            display: block;
+        }
+        
+        .metric-label {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div style="margin-bottom: 24px;">
+            <a href="{% url 'learning:games_list' %}" class="btn-secondary">← Back to Games</a>
+        </div>
+        
+        <div class="game-header">
+            <h1>⚙️ Process Scheduler Simulator</h1>
+            <p>Learn how different CPU scheduling algorithms work!</p>
+        </div>
+        
+        <div class="algorithm-selector">
+            <button class="algorithm-btn active" onclick="setAlgorithm('fcfs')">
+                First Come First Serve (FCFS)
+            </button>
+            <button class="algorithm-btn" onclick="setAlgorithm('sjf')">
+                Shortest Job First (SJF)
+            </button>
+            <button class="algorithm-btn" onclick="setAlgorithm('rr')">
+                Round Robin (RR)
+            </button>
+            <button class="algorithm-btn" onclick="setAlgorithm('priority')">
+                Priority Scheduling
+            </button>
+        </div>
+        
+        <div class="game-board">
+            <div class="processes-panel">
+                <h3>📋 Process Queue</h3>
+                <div class="process-list" id="processList"></div>
+            </div>
+            
+            <div class="timeline-panel">
+                <h3>⏱️ Execution Timeline</h3>
+                <div class="timeline" id="timeline"></div>
+                
+                <div class="metrics">
+                    <div class="metric-card">
+                        <span class="metric-value" id="avgWaitTime">0.0</span>
+                        <span class="metric-label">Avg Wait Time</span>
+                    </div>
+                    <div class="metric-card">
+                        <span class="metric-value" id="avgTurnaround">0.0</span>
+                        <span class="metric-label">Avg Turnaround</span>
+                    </div>
+                    <div class="metric-card">
+                        <span class="metric-value" id="throughput">0.0</span>
+                        <span class="metric-label">Throughput</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="btn-primary" onclick="startSimulation()">▶ Start Simulation</button>
+            <button class="btn-secondary" onclick="resetSimulation()">🔄 Reset</button>
+            <button class="btn-secondary" onclick="generateRandomProcesses()">🎲 Random Processes</button>
+        </div>
+    </div>
+    
+    <script>
+        const colors = ['#6366f1', '#8b5cf6', '#ec4899', '#10b981', '#f59e0b', '#ef4444'];
+        let currentAlgorithm = 'fcfs';
+        let processes = [];
+        let isRunning = false;
+        
+        function generateRandomProcesses() {
+            processes = [];
+            const count = 5 + Math.floor(Math.random() * 3);
+            
+            for (let i = 0; i < count; i++) {
+                processes.push({
+                    id: `P${i + 1}`,
+                    arrivalTime: Math.floor(Math.random() * 5),
+                    burstTime: 2 + Math.floor(Math.random() * 8),
+                    priority: Math.floor(Math.random() * 5) + 1,
+                    color: colors[i % colors.length],
+                    remainingTime: 0,
+                    waitTime: 0,
+                    turnaroundTime: 0,
+                    completed: false
+                });
+            }
+            
+            processes.forEach(p => p.remainingTime = p.burstTime);
+            renderProcesses();
+            resetTimeline();
+        }
+        
+        function setAlgorithm(algo) {
+            currentAlgorithm = algo;
+            document.querySelectorAll('.algorithm-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            resetSimulation();
+        }
+        
+        function renderProcesses() {
+            const list = document.getElementById('processList');
+            list.innerHTML = '';
+            
+            processes.forEach((p, index) => {
+                const div = document.createElement('div');
+                div.className = `process-item ${p.completed ? 'completed' : ''}`;
+                div.innerHTML = `
+                    <div class="process-color" style="background: ${p.color}"></div>
+                    <div class="process-info">
+                        <div class="process-name">${p.id}</div>
+                        <div class="process-stats">
+                            Arrival: ${p.arrivalTime}ms | Burst: ${p.burstTime}ms | Priority: ${p.priority}
+                        </div>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+        }
+        
+        function resetTimeline() {
+            document.getElementById('timeline').innerHTML = '';
+            document.getElementById('avgWaitTime').textContent = '0.0';
+            document.getElementById('avgTurnaround').textContent = '0.0';
+            document.getElementById('throughput').textContent = '0.0';
+        }
+        
+        function resetSimulation() {
+            isRunning = false;
+            generateRandomProcesses();
+        }
+        
+        async function startSimulation() {
+            if (isRunning) return;
+            isRunning = true;
+            resetTimeline();
+            
+            // Reset completion status
+            processes.forEach(p => {
+                p.completed = false;
+                p.remainingTime = p.burstTime;
+                p.waitTime = 0;
+                p.turnaroundTime = 0;
+            });
+            
+            const timeline = document.getElementById('timeline');
+            let currentTime = 0;
+            let completedCount = 0;
+            let queue = [...processes].sort((a, b) => a.arrivalTime - b.arrivalTime);
+            
+            switch (currentAlgorithm) {
+                case 'fcfs':
+                    await scheduleFCFS(queue, timeline);
+                    break;
+                case 'sjf':
+                    await scheduleSJF(queue, timeline);
+                    break;
+                case 'rr':
+                    await scheduleRR(queue, timeline);
+                    break;
+                case 'priority':
+                    await schedulePriority(queue, timeline);
+                    break;
+            }
+            
+            calculateMetrics();
+            renderProcesses();
+            isRunning = false;
+        }
+        
+        async function scheduleFCFS(queue, timeline) {
+            let currentTime = 0;
+            
+            for (const process of queue) {
+                if (currentTime < process.arrivalTime) {
+                    currentTime = process.arrivalTime;
+                }
+                
+                process.waitTime = currentTime - process.arrivalTime;
+                
+                for (let i = 0; i < process.burstTime; i++) {
+                    addTimelineBlock(timeline, process);
+                    await sleep(200);
+                    currentTime++;
+                }
+                
+                process.turnaroundTime = currentTime - process.arrivalTime;
+                process.completed = true;
+                renderProcesses();
+            }
+        }
+        
+        async function scheduleSJF(queue, timeline) {
+            let currentTime = 0;
+            const remaining = [...queue];
+            
+            while (remaining.length > 0) {
+                const available = remaining.filter(p => p.arrivalTime <= currentTime);
+                
+                if (available.length === 0) {
+                    currentTime++;
+                    continue;
+                }
+                
+                available.sort((a, b) => a.burstTime - b.burstTime);
+                const process = available[0];
+                
+                process.waitTime = currentTime - process.arrivalTime;
+                
+                for (let i = 0; i < process.burstTime; i++) {
+                    addTimelineBlock(timeline, process);
+                    await sleep(200);
+                    currentTime++;
+                }
+                
+                process.turnaroundTime = currentTime - process.arrivalTime;
+                process.completed = true;
+                remaining.splice(remaining.indexOf(process), 1);
+                renderProcesses();
+            }
+        }
+        
+        async function scheduleRR(queue, timeline) {
+            const quantum = 2;
+            let currentTime = 0;
+            const remaining = queue.map(p => ({...p, remainingTime: p.burstTime}));
+            
+            while (remaining.some(p => p.remainingTime > 0)) {
+                for (const process of remaining) {
+                    if (process.remainingTime === 0 || process.arrivalTime > currentTime) continue;
+                    
+                    const executeTime = Math.min(quantum, process.remainingTime);
+                    
+                    for (let i = 0; i < executeTime; i++) {
+                        addTimelineBlock(timeline, process);
+                        await sleep(200);
+                        currentTime++;
+                    }
+                    
+                    process.remainingTime -= executeTime;
+                    
+                    if (process.remainingTime === 0) {
+                        process.turnaroundTime = currentTime - process.arrivalTime;
+                        process.waitTime = process.turnaroundTime - process.burstTime;
+                        process.completed = true;
+                        const original = processes.find(p => p.id === process.id);
+                        if (original) {
+                            original.completed = true;
+                            original.waitTime = process.waitTime;
+                            original.turnaroundTime = process.turnaroundTime;
+                        }
+                        renderProcesses();
+                    }
+                }
+            }
+        }
+        
+        async function schedulePriority(queue, timeline) {
+            let currentTime = 0;
+            const remaining = [...queue];
+            
+            while (remaining.length > 0) {
+                const available = remaining.filter(p => p.arrivalTime <= currentTime);
+                
+                if (available.length === 0) {
+                    currentTime++;
+                    continue;
+                }
+                
+                available.sort((a, b) => a.priority - b.priority);
+                const process = available[0];
+                
+                process.waitTime = currentTime - process.arrivalTime;
+                
+                for (let i = 0; i < process.burstTime; i++) {
+                    addTimelineBlock(timeline, process);
+                    await sleep(200);
+                    currentTime++;
+                }
+                
+                process.turnaroundTime = currentTime - process.arrivalTime;
+                process.completed = true;
+                remaining.splice(remaining.indexOf(process), 1);
+                renderProcesses();
+            }
+        }
+        
+        function addTimelineBlock(timeline, process) {
+            const block = document.createElement('div');
+            block.className = 'timeline-block';
+            block.style.background = process.color;
+            block.textContent = process.id;
+            timeline.appendChild(block);
+        }
+        
+        function calculateMetrics() {
+            const completed = processes.filter(p => p.completed);
+            if (completed.length === 0) return;
+            
+            const avgWait = completed.reduce((sum, p) => sum + p.waitTime, 0) / completed.length;
+            const avgTurnaround = completed.reduce((sum, p) => sum + p.turnaroundTime, 0) / completed.length;
+            const totalTime = Math.max(...completed.map(p => p.turnaroundTime + p.arrivalTime));
+            const throughput = (completed.length / totalTime).toFixed(2);
+            
+            document.getElementById('avgWaitTime').textContent = avgWait.toFixed(1);
+            document.getElementById('avgTurnaround').textContent = avgTurnaround.toFixed(1);
+            document.getElementById('throughput').textContent = throughput;
+        }
+        
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+        
+        // Initialize
+        generateRandomProcesses();
+    </script>
+</body>
+</html>

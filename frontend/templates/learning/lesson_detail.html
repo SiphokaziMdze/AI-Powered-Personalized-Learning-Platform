@@ -1,0 +1,472 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <style>
+        .lesson-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+        
+        .lesson-header {
+            background: var(--card);
+            border: 1px solid var(--ring);
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 32px;
+        }
+        
+        .lesson-breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--muted);
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+        
+        .lesson-progress-box {
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid var(--ring);
+        }
+        
+        .progress-stats {
+            display: flex;
+            gap: 24px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .progress-stat {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .lesson-content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+        }
+        
+        @media (max-width: 968px) {
+            .lesson-content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .main-content {
+            background: var(--card);
+            border: 1px solid var(--ring);
+            border-radius: 16px;
+            padding: 32px;
+        }
+        
+        .content-section {
+            margin-bottom: 32px;
+        }
+        
+        .content-section h2 {
+            margin-bottom: 16px;
+            color: var(--text);
+        }
+        
+        .content-text {
+            line-height: 1.8;
+            color: var(--text);
+        }
+        
+        .content-text p {
+            margin-bottom: 16px;
+        }
+        
+        .content-text h3 {
+            margin-top: 24px;
+            margin-bottom: 12px;
+        }
+        
+        .content-text ul, .content-text ol {
+            margin-left: 24px;
+            margin-bottom: 16px;
+        }
+        
+        .content-text li {
+            margin-bottom: 8px;
+        }
+        
+        .content-text code {
+            background: var(--background);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .content-text pre {
+            background: var(--background);
+            border: 1px solid var(--ring);
+            border-radius: 8px;
+            padding: 16px;
+            overflow-x: auto;
+            margin: 16px 0;
+        }
+        
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+        
+        .sidebar-card {
+            background: var(--card);
+            border: 1px solid var(--ring);
+            border-radius: 16px;
+            padding: 24px;
+        }
+        
+        .sidebar-card h3 {
+            margin-bottom: 16px;
+        }
+        
+        .resource-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .resource-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: var(--background);
+            border: 1px solid var(--ring);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: var(--text);
+        }
+        
+        .resource-item:hover {
+            transform: translateX(4px);
+            border-color: var(--accent);
+        }
+        
+        .resource-item-icon {
+            font-size: 24px;
+        }
+        
+        .resource-item-text {
+            flex: 1;
+        }
+        
+        .resource-item-text h4 {
+            margin: 0;
+            font-size: 14px;
+        }
+        
+        .resource-item-text p {
+            margin: 4px 0 0;
+            font-size: 12px;
+            color: var(--muted);
+        }
+        
+        .quiz-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .quiz-item {
+            padding: 16px;
+            background: linear-gradient(135deg, rgba(99,102,241,0.1), rgba(139,92,246,0.1));
+            border: 1px solid var(--ring);
+            border-radius: 12px;
+        }
+        
+        .quiz-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .quiz-item h4 {
+            margin: 0;
+        }
+        
+        .quiz-badge {
+            font-size: 12px;
+            padding: 4px 12px;
+            border-radius: 12px;
+            background: var(--accent);
+            color: #0b1020;
+            font-weight: 600;
+        }
+        
+        .quiz-badge.completed {
+            background: #10b981;
+        }
+        
+        .quiz-meta {
+            display: flex;
+            gap: 16px;
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 12px;
+        }
+        
+        .quiz-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .navigation-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 32px;
+            padding-top: 32px;
+            border-top: 1px solid var(--ring);
+        }
+        
+        .complete-lesson-btn {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 24px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .complete-lesson-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
+        }
+        
+        .complete-lesson-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="lesson-container">
+        <!-- Back button -->
+        <div style="margin-bottom: 24px;">
+            <a href="{% url 'frontend:dashboard' %}" class="btn-secondary">← Back to Dashboard</a>
+        </div>
+        
+        <!-- Lesson Header -->
+        <div class="lesson-header">
+            <div class="lesson-breadcrumb">
+                <span>{{ lesson.course.title }}</span>
+                <span>›</span>
+                <span>Lesson {{ lesson.order }}</span>
+            </div>
+            
+            <h1>{{ lesson.title }}</h1>
+            
+            <div class="lesson-progress-box">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span style="font-weight: 600;">Your Progress</span>
+                    <span style="font-weight: 700; color: var(--accent);">{{ progress.completion_percentage|floatformat:0 }}%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: {{ progress.completion_percentage }}%"></div>
+                </div>
+                
+                <div class="progress-stats">
+                    <div class="progress-stat">
+                        <span>📅</span>
+                        <span>Last accessed: {{ progress.last_accessed|date:"M d, Y" }}</span>
+                    </div>
+                    {% if progress.is_completed %}
+                    <div class="progress-stat">
+                        <span>✅</span>
+                        <span style="color: #10b981;">Completed</span>
+                    </div>
+                    {% else %}
+                    <div class="progress-stat">
+                        <span>⏳</span>
+                        <span style="color: var(--accent);">In Progress</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content Grid -->
+        <div class="lesson-content-grid">
+            <!-- Main Content -->
+            <div class="main-content">
+                <div class="content-section">
+                    <h2>📖 Lesson Content</h2>
+                    <div class="content-text">
+                        {% if lesson.content %}
+                            {{ lesson.content|linebreaks }}
+                        {% else %}
+                            <p style="color: var(--muted); padding: 32px; text-align: center; background: var(--background); border-radius: 8px;">
+                                Content for this lesson is being prepared. Check back soon or explore the resources below!
+                            </p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Navigation Buttons -->
+                <div class="navigation-buttons">
+                    {% if not progress.is_completed %}
+                    <button class="complete-lesson-btn" onclick="completeLesson()">
+                        ✓ Mark as Complete
+                    </button>
+                    {% else %}
+                    <button class="complete-lesson-btn" disabled>
+                        ✓ Completed
+                    </button>
+                    {% endif %}
+                    
+                    <a href="{% url 'frontend:dashboard' %}" class="btn-secondary">
+                        Back to Dashboard
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <!-- Resources -->
+                <div class="sidebar-card">
+                    <h3>📚 Resources</h3>
+                    <div class="resource-list">
+                        {% for resource in resources %}
+                        <a href="{% url 'learning:resource_view' resource.id %}" class="resource-item">
+                            <div class="resource-item-icon">
+                                {% if resource.kind == 'video' %}🎥
+                                {% elif resource.kind == 'pdf' %}📄
+                                {% elif resource.kind == 'code' %}💻
+                                {% elif resource.kind == 'image' %}🖼️
+                                {% elif resource.kind == 'link' %}🔗
+                                {% else %}📖{% endif %}
+                            </div>
+                            <div class="resource-item-text">
+                                <h4>{{ resource.title }}</h4>
+                                <p>{{ resource.get_kind_display }}</p>
+                            </div>
+                        </a>
+                        {% empty %}
+                        <p style="color: var(--muted); text-align: center; padding: 16px;">
+                            No resources yet
+                        </p>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <!-- Quizzes -->
+                <div class="sidebar-card">
+                    <h3>📝 Quizzes & Assessments</h3>
+                    <div class="quiz-list">
+                        {% for quiz_item in quiz_data %}
+                        <div class="quiz-item">
+                            <div class="quiz-item-header">
+                                <h4>{{ quiz_item.quiz.title }}</h4>
+                                <span class="quiz-badge {% if quiz_item.attempted %}completed{% endif %}">
+                                    {% if quiz_item.attempted %}Attempted{% else %}Available{% endif %}
+                                </span>
+                            </div>
+                            
+                            <div class="quiz-meta">
+                                <span>⏱️ {{ quiz_item.quiz.time_limit }} min</span>
+                                <span>📊 Pass: {{ quiz_item.quiz.pass_score }}%</span>
+                            </div>
+                            
+                            {% if quiz_item.best_score %}
+                            <p style="color: var(--muted); font-size: 13px; margin-bottom: 12px;">
+                                Best Score: <strong style="color: var(--accent);">{{ quiz_item.best_score }}%</strong>
+                            </p>
+                            {% endif %}
+                            
+                            <div class="quiz-actions">
+                                <a href="{% url 'learning:quiz_view' quiz_item.quiz.id %}" class="btn-primary btn-small">
+                                    {% if quiz_item.attempted %}Retake{% else %}Start{% endif %} Quiz
+                                </a>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <p style="color: var(--muted); text-align: center; padding: 16px;">
+                            No quizzes available
+                        </p>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <!-- Quick Actions -->
+                <div class="sidebar-card">
+                    <h3>⚡ Quick Actions</h3>
+                    <div style="display: grid; gap: 8px;">
+                        <a href="{% url 'learning:ai_chatbot' %}" class="btn-secondary full-width">
+                            🤖 Ask AI Tutor
+                        </a>
+                        <a href="{% url 'learning:games_list' %}" class="btn-secondary full-width">
+                            🎮 Practice Games
+                        </a>
+                        <a href="{% url 'learning:ai_dashboard' %}" class="btn-secondary full-width">
+                            📊 View Analytics
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function completeLesson() {
+            if (confirm('Mark this lesson as complete?')) {
+                // In a real implementation, you'd make an AJAX call to update progress
+                fetch('/learning/api/complete-lesson/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({
+                        lesson_id: '{{ lesson.id }}'
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Lesson completed! Great job! 🎉');
+                        location.reload();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    // Fallback: just reload and let Django handle it
+                    location.reload();
+                });
+            }
+        }
+        
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,268 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Typer - Learning Game</title>
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <style>
+        .game-container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+        
+        .game-header {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            padding: 24px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+        
+        .game-header h2 {
+            margin: 0 0 16px 0;
+        }
+        
+        .game-stats {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            font-size: 18px;
+            flex-wrap: wrap;
+        }
+        
+        .back-btn {
+            margin-top: 16px;
+            padding: 8px 24px;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+        }
+        
+        .typing-area {
+            background: rgba(99, 102, 241, 0.1);
+            border: 2px solid var(--ring);
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 24px;
+        }
+        
+        #typingText {
+            font-family: 'Courier New', monospace;
+            font-size: 1.3rem;
+            line-height: 1.8;
+            margin-bottom: 24px;
+            min-height: 60px;
+        }
+        
+        #typingInput {
+            width: 100%;
+            padding: 16px;
+            font-size: 1.1rem;
+            font-family: 'Courier New', monospace;
+            border-radius: 12px;
+            border: 2px solid var(--accent);
+            background: var(--background);
+            color: var(--text);
+        }
+        
+        #typingInput:focus {
+            outline: none;
+            border-color: #10b981;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+        }
+        
+        .control-btn {
+            padding: 12px 32px;
+            background: var(--card);
+            border: 2px solid var(--ring);
+            border-radius: 12px;
+            color: var(--text);
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .control-btn:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+        
+        .game-over {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--card);
+            padding: 48px;
+            border-radius: 24px;
+            border: 2px solid var(--ring);
+            text-align: center;
+            z-index: 1000;
+            min-width: 400px;
+        }
+        
+        .game-over.show {
+            display: block;
+        }
+        
+        .game-over h2 {
+            margin: 0 0 16px 0;
+            font-size: 36px;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <h2>⌨️ Code Typer</h2>
+            <div class="game-stats">
+                <span>WPM: <span id="typingWPM">0</span></span>
+                <span>Accuracy: <span id="typingAccuracy">100</span>%</span>
+                <span>Time: <span id="typingTime">60</span>s</span>
+            </div>
+            <a href="{% url 'learning:games_list' %}" class="back-btn">Exit</a>
+        </div>
+        
+        <div class="typing-area">
+            <div id="typingText"></div>
+            <input type="text" id="typingInput" placeholder="Start typing..." autocomplete="off">
+        </div>
+        
+        <div class="controls">
+            <button class="control-btn" onclick="typingGame.reset()">New Text</button>
+            <a href="{% url 'learning:games_list' %}" class="btn-secondary">Back to Games</a>
+        </div>
+        
+        <div class="game-over" id="typingGameOver">
+            <h2>Time's Up!</h2>
+            <p style="font-size: 1.2rem; margin: 1rem 0;">
+                WPM: <span id="finalWPM">0</span><br>
+                Accuracy: <span id="finalAccuracy">0</span>%<br>
+                Characters: <span id="finalChars">0</span>
+            </p>
+            <button class="control-btn" onclick="typingGame.reset()">Try Again</button>
+            <br><br>
+            <a href="{% url 'learning:games_list' %}" class="btn-secondary">Back to Games</a>
+        </div>
+    </div>
+
+    <script>
+        const typingGame = {
+            texts: [
+                "function calculateSum(a, b) { return a + b; }",
+                "const arr = [1, 2, 3]; arr.map(x => x * 2);",
+                "SELECT * FROM users WHERE age > 18;",
+                "if (condition) { console.log('true'); }",
+                "class Person { constructor(name) { this.name = name; } }",
+                "for (let i = 0; i < 10; i++) { console.log(i); }",
+                "const promise = new Promise((resolve, reject) => {});",
+                "UPDATE products SET price = price * 1.1 WHERE category = 'books';",
+            ],
+            currentText: '',
+            startTime: null,
+            totalTime: 60,
+            timer: null,
+            correctChars: 0,
+            totalChars: 0,
+
+            init() {
+                this.reset();
+                document.getElementById('typingInput').addEventListener('input', (e) => this.handleInput(e));
+            },
+
+            reset() {
+                clearInterval(this.timer);
+                document.getElementById('typingGameOver').classList.remove('show');
+                this.currentText = this.texts[Math.floor(Math.random() * this.texts.length)];
+                document.getElementById('typingText').textContent = this.currentText;
+                document.getElementById('typingInput').value = '';
+                document.getElementById('typingInput').disabled = false;
+                document.getElementById('typingTime').textContent = this.totalTime;
+                this.startTime = null;
+                this.correctChars = 0;
+                this.totalChars = 0;
+                this.updateStats();
+                document.getElementById('typingInput').focus();
+            },
+
+            handleInput(e) {
+                if (!this.startTime) {
+                    this.startTime = Date.now();
+                    this.startTimer();
+                }
+
+                const typed = e.target.value;
+                this.totalChars = typed.length;
+                this.correctChars = 0;
+
+                let highlighted = '';
+                for (let i = 0; i < this.currentText.length; i++) {
+                    if (i < typed.length) {
+                        if (typed[i] === this.currentText[i]) {
+                            highlighted += `<span style="color: #10b981;">${this.currentText[i]}</span>`;
+                            this.correctChars++;
+                        } else {
+                            highlighted += `<span style="color: #ef4444;">${this.currentText[i]}</span>`;
+                        }
+                    } else {
+                        highlighted += this.currentText[i];
+                    }
+                }
+                document.getElementById('typingText').innerHTML = highlighted;
+                this.updateStats();
+
+                if (typed === this.currentText) {
+                    this.endGame();
+                }
+            },
+
+            startTimer() {
+                let timeLeft = this.totalTime;
+                this.timer = setInterval(() => {
+                    timeLeft--;
+                    document.getElementById('typingTime').textContent = timeLeft;
+                    if (timeLeft <= 0) {
+                        this.endGame();
+                    }
+                }, 1000);
+            },
+
+            updateStats() {
+                const elapsed = this.startTime ? (Date.now() - this.startTime) / 1000 / 60 : 0;
+                const wpm = elapsed > 0 ? Math.round((this.correctChars / 5) / elapsed) : 0;
+                const accuracy = this.totalChars > 0 ? Math.round((this.correctChars / this.totalChars) * 100) : 100;
+                
+                document.getElementById('typingWPM').textContent = wpm;
+                document.getElementById('typingAccuracy').textContent = accuracy;
+            },
+
+            endGame() {
+                clearInterval(this.timer);
+                document.getElementById('typingInput').disabled = true;
+                const elapsed = (Date.now() - this.startTime) / 1000 / 60;
+                const wpm = Math.round((this.correctChars / 5) / elapsed);
+                const accuracy = this.totalChars > 0 ? Math.round((this.correctChars / this.totalChars) * 100) : 100;
+                
+                document.getElementById('finalWPM').textContent = wpm;
+                document.getElementById('finalAccuracy').textContent = accuracy;
+                document.getElementById('finalChars').textContent = this.correctChars;
+                document.getElementById('typingGameOver').classList.add('show');
+            }
+        };
+
+        typingGame.init();
+    </script>
+</body>
+</html>

@@ -15,8 +15,14 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 Django settings for core project.
 """
 from pathlib import Path
+from decouple import config
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+SECRET_KEY = config('SECRET_KEY')
+DEBUG = config('DEBUG', default=True, cast=bool)
+GEMINI_API_KEY = config('GEMINI_API_KEY', default='')
+
 SECRET_KEY = 'django-insecure--abxfx8ir9e_%&uf%-n5@1mz1o*u1$&^8bkc-$&-&6lce-$&4j'
 DEBUG = True
 ALLOWED_HOSTS = ['*']
@@ -30,9 +36,12 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'frontend',
     'learning',
+    'django.contrib.humanize',
+    'corsheaders'
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -41,6 +50,13 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+    }
+}
 
 ROOT_URLCONF = 'core.urls'
 
@@ -75,6 +91,25 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': 'ai_debug.log',
+        },
+    },
+    'loggers': {
+        'learning.ai_services': {
+            'handlers': ['file'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+    },
+}
 
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'

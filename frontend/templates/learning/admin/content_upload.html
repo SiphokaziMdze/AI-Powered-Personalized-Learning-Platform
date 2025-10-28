@@ -18,7 +18,7 @@
                 </div>
             </div>
             <div class="user-info">
-                <a href="{% url 'learning:content_dashboard' %}" class="btn-secondary">← Dashboard</a>
+                <a href="{% url 'frontend:dashboard' %}" class="btn-secondary">← Dashboard</a>
             </div>
         </div>
     </header>
@@ -42,8 +42,8 @@
                 {% csrf_token %}
                 
                 <div style="margin: 1rem 0;">
-                    <label>Course:</label>
-                    <select name="course_id" id="courseSelect" onchange="loadLessons()" required style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid var(--ring); background: var(--background); color: var(--text);">
+                    <label style="display:block; margin-bottom:0.5rem; font-weight:600;">Course:</label>
+                    <select name="course_id" id="courseSelect" required onchange="loadLessons()" style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid var(--ring); background: var(--background); color: var(--text);">
                         <option value="">-- Select Course --</option>
                         {% for course in courses %}
                         <option value="{{ course.id }}">{{ course.title }}</option>
@@ -52,41 +52,42 @@
                 </div>
 
                 <div style="margin: 1rem 0;">
-                    <label>Lesson:</label>
+                    <label style="display:block; margin-bottom:0.5rem; font-weight:600;">Lesson:</label>
                     <select name="lesson_id" id="lessonSelect" required style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid var(--ring); background: var(--background); color: var(--text);">
-                        <option value="">-- Select Lesson --</option>
+                        <option value="">-- Select Course First --</option>
                     </select>
                 </div>
 
                 <div style="margin: 1rem 0;">
-                    <label>Title:</label>
+                    <label style="display:block; margin-bottom:0.5rem; font-weight:600;">Title:</label>
                     <input type="text" name="title" required style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid var(--ring); background: var(--background); color: var(--text);">
                 </div>
 
                 <div style="margin: 1rem 0;">
-                    <label>Resource Type:</label>
+                    <label style="display:block; margin-bottom:0.5rem; font-weight:600;">Resource Type:</label>
                     <select name="resource_type" style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid var(--ring); background: var(--background); color: var(--text);">
-                        <option value="note">Study Note</option>
-                        <option value="pdf">PDF Document</option>
-                        <option value="video">Video</option>
-                        <option value="image">Image</option>
-                        <option value="link">External Link</option>
-                        <option value="code">Code Example</option>
+                        <option value="note">📄 Study Note</option>
+                        <option value="pdf">📕 PDF Document</option>
+                        <option value="video">🎥 Video</option>
+                        <option value="image">🖼️ Image</option>
+                        <option value="link">🔗 External Link</option>
+                        <option value="code">💻 Code Example</option>
                     </select>
                 </div>
 
                 <div style="margin: 1rem 0;">
-                    <label>File Upload (optional):</label>
+                    <label style="display:block; margin-bottom:0.5rem; font-weight:600;">Upload File (optional):</label>
                     <input type="file" name="file" style="width: 100%; padding: 0.75rem;">
+                    <small style="color: var(--muted);">Supported: PDF, MP4, JPG, PNG, ZIP</small>
                 </div>
 
                 <div style="margin: 1rem 0;">
-                    <label>URL (optional):</label>
-                    <input type="url" name="url" placeholder="https://example.com" style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid var(--ring); background: var(--background); color: var(--text);">
+                    <label style="display:block; margin-bottom:0.5rem; font-weight:600;">Or Enter URL (optional):</label>
+                    <input type="url" name="url" placeholder="https://example.com/resource" style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid var(--ring); background: var(--background); color: var(--text);">
                 </div>
 
                 <div style="margin: 1rem 0;">
-                    <label>Description:</label>
+                    <label style="display:block; margin-bottom:0.5rem; font-weight:600;">Description:</label>
                     <textarea name="description" rows="4" style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid var(--ring); background: var(--background); color: var(--text);"></textarea>
                 </div>
 
@@ -102,6 +103,7 @@
                 <thead>
                     <tr style="border-bottom: 2px solid var(--ring);">
                         <th style="padding: 1rem; text-align: left;">Title</th>
+                        <th style="padding: 1rem; text-align: left;">Course</th>
                         <th style="padding: 1rem; text-align: left;">Lesson</th>
                         <th style="padding: 1rem; text-align: left;">Type</th>
                         <th style="padding: 1rem; text-align: left;">Date</th>
@@ -111,14 +113,15 @@
                     {% for resource in recent_uploads %}
                     <tr style="border-bottom: 1px solid var(--ring);">
                         <td style="padding: 1rem;">{{ resource.title }}</td>
+                        <td style="padding: 1rem;">{{ resource.lesson.course.title }}</td>
                         <td style="padding: 1rem;">{{ resource.lesson.title }}</td>
                         <td style="padding: 1rem;">{{ resource.get_kind_display }}</td>
-                        <td style="padding: 1rem;">{{ resource.created_at|date:"Y-m-d" }}</td>
+                        <td style="padding: 1rem;">{{ resource.created_at|date:"Y-m-d H:i" }}</td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="4" style="padding: 2rem; text-align: center; color: var(--muted);">
-                            No uploads yet
+                        <td colspan="5" style="padding: 2rem; text-align: center; color: var(--muted);">
+                            No uploads yet. Upload your first resource above!
                         </td>
                     </tr>
                     {% endfor %}
@@ -128,24 +131,46 @@
     </main>
 
     <script>
-        const coursesData = {{ courses|safe }};
+        // Courses data from Django - FIXED to handle UUIDs properly
+        const coursesData = JSON.parse('{{ courses_json|safe }}');
+        
+        console.log('📤 Content Upload page loaded');
+        console.log('Available courses:', coursesData);
         
         function loadLessons() {
-            const courseId = document.getElementById('courseSelect').value;
+            const courseSelect = document.getElementById('courseSelect');
             const lessonSelect = document.getElementById('lessonSelect');
+            const selectedCourseId = courseSelect.value;
+            
+            console.log('Selected course ID:', selectedCourseId);
+            
+            // Clear current options
             lessonSelect.innerHTML = '<option value="">-- Select Lesson --</option>';
             
-            if (!courseId) return;
+            if (!selectedCourseId) {
+                return;
+            }
             
-            // Find course lessons
-            const course = coursesData.find(c => c.id === courseId);
-            if (course && course.lessons) {
+            // Find the selected course - compare as strings
+            const course = coursesData.find(c => String(c.id) === String(selectedCourseId));
+            
+            console.log('Found course:', course);
+            
+            if (course && course.lessons && course.lessons.length > 0) {
+                console.log('Adding lessons:', course.lessons);
+                
+                // Add lessons to dropdown
                 course.lessons.forEach(lesson => {
                     const option = document.createElement('option');
                     option.value = lesson.id;
-                    option.textContent = lesson.title;
+                    option.textContent = `${lesson.order}. ${lesson.title}`;
                     lessonSelect.appendChild(option);
                 });
+                
+                console.log('Lessons loaded successfully');
+            } else {
+                console.log('No lessons found for this course');
+                lessonSelect.innerHTML = '<option value="">-- No lessons found --</option>';
             }
         }
     </script>

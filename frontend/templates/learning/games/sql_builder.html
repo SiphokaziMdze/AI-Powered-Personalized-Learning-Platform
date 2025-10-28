@@ -1,0 +1,455 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL Query Builder - Learning Game</title>
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <style>
+        .game-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+        
+        .game-header {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            padding: 32px;
+            border-radius: 16px;
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        
+        .challenge-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+        
+        .challenge-card {
+            background: var(--card);
+            border: 2px solid var(--ring);
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .challenge-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+        
+        .challenge-card.active {
+            border-color: var(--accent);
+            background: rgba(99,102,241,0.1);
+        }
+        
+        .challenge-card.completed {
+            border-color: #10b981;
+            background: rgba(16,185,129,0.1);
+        }
+        
+        .challenge-difficulty {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .difficulty-easy { background: #10b981; color: white; }
+        .difficulty-medium { background: #f59e0b; color: white; }
+        .difficulty-hard { background: #ef4444; color: white; }
+        
+        .game-area {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+        
+        @media (max-width: 968px) {
+            .game-area {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .panel {
+            background: var(--card);
+            border: 1px solid var(--ring);
+            border-radius: 16px;
+            padding: 24px;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+            font-size: 13px;
+        }
+        
+        .data-table th {
+            background: var(--background);
+            padding: 8px;
+            text-align: left;
+            font-weight: 600;
+            border: 1px solid var(--ring);
+        }
+        
+        .data-table td {
+            padding: 8px;
+            border: 1px solid var(--ring);
+        }
+        
+        .query-editor {
+            width: 100%;
+            min-height: 120px;
+            background: var(--background);
+            color: var(--text);
+            border: 2px solid var(--ring);
+            border-radius: 8px;
+            padding: 16px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            resize: vertical;
+            margin-top: 16px;
+        }
+        
+        .query-editor:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+        
+        .result-box {
+            margin-top: 16px;
+            padding: 16px;
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .result-box.show {
+            display: block;
+        }
+        
+        .result-box.success {
+            background: rgba(16,185,129,0.1);
+            border: 1px solid #10b981;
+        }
+        
+        .result-box.error {
+            background: rgba(239,68,68,0.1);
+            border: 1px solid #ef4444;
+        }
+        
+        .hint-box {
+            background: rgba(245,158,11,0.1);
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 16px;
+            display: none;
+        }
+        
+        .hint-box.show {
+            display: block;
+        }
+        
+        .score-display {
+            text-align: center;
+            padding: 16px;
+            background: linear-gradient(135deg, rgba(99,102,241,0.1), rgba(139,92,246,0.1));
+            border-radius: 12px;
+            margin-bottom: 24px;
+        }
+        
+        .score-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--accent);
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div style="margin-bottom: 24px;">
+            <a href="{% url 'learning:games_list' %}" class="btn-secondary">← Back to Games</a>
+        </div>
+        
+        <div class="game-header">
+            <h1>💾 SQL Query Builder Challenge</h1>
+            <p>Write SQL queries to solve challenges and master database skills!</p>
+        </div>
+        
+        <div class="score-display">
+            <div class="score-value" id="scoreDisplay">0 / 6</div>
+            <div style="color: var(--muted); margin-top: 8px;">Challenges Completed</div>
+        </div>
+        
+        <div class="challenge-selector" id="challengeSelector"></div>
+        
+        <div class="game-area">
+            <div class="panel">
+                <h3>📋 Challenge</h3>
+                <div id="challengeDescription" style="color: var(--muted); margin-top: 16px;">
+                    Select a challenge to begin
+                </div>
+                
+                <h4 style="margin-top: 24px;">📊 Database Tables</h4>
+                <div id="tableDisplay"></div>
+            </div>
+            
+            <div class="panel">
+                <h3>💻 Your Query</h3>
+                <textarea class="query-editor" id="queryEditor" placeholder="Write your SQL query here..."></textarea>
+                
+                <div style="display: flex; gap: 12px; margin-top: 16px;">
+                    <button class="btn-primary" onclick="runQuery()">▶ Run Query</button>
+                    <button class="btn-secondary" onclick="showHint()">💡 Hint</button>
+                    <button class="btn-secondary" onclick="resetQuery()">🔄 Reset</button>
+                </div>
+                
+                <div class="hint-box" id="hintBox"></div>
+                <div class="result-box" id="resultBox"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const challenges = [
+            {
+                id: 1,
+                title: 'Select All Students',
+                difficulty: 'easy',
+                description: 'Write a query to select all columns from the Students table.',
+                tables: {
+                    Students: [
+                        { id: 1, name: 'Alice', age: 20, grade: 'A' },
+                        { id: 2, name: 'Bob', age: 21, grade: 'B' },
+                        { id: 3, name: 'Charlie', age: 19, grade: 'A' }
+                    ]
+                },
+                solution: 'SELECT * FROM Students',
+                hint: 'Use SELECT * to get all columns'
+            },
+            {
+                id: 2,
+                title: 'Filter by Grade',
+                difficulty: 'easy',
+                description: 'Select all students who have grade "A".',
+                tables: {
+                    Students: [
+                        { id: 1, name: 'Alice', age: 20, grade: 'A' },
+                        { id: 2, name: 'Bob', age: 21, grade: 'B' },
+                        { id: 3, name: 'Charlie', age: 19, grade: 'A' }
+                    ]
+                },
+                solution: 'SELECT * FROM Students WHERE grade = \'A\'',
+                hint: 'Use WHERE clause with grade = \'A\''
+            },
+            {
+                id: 3,
+                title: 'Order by Age',
+                difficulty: 'medium',
+                description: 'Select all students ordered by age in descending order.',
+                tables: {
+                    Students: [
+                        { id: 1, name: 'Alice', age: 20, grade: 'A' },
+                        { id: 2, name: 'Bob', age: 21, grade: 'B' },
+                        { id: 3, name: 'Charlie', age: 19, grade: 'A' }
+                    ]
+                },
+                solution: 'SELECT * FROM Students ORDER BY age DESC',
+                hint: 'Use ORDER BY age DESC'
+            },
+            {
+                id: 4,
+                title: 'Count Students',
+                difficulty: 'medium',
+                description: 'Count the total number of students.',
+                tables: {
+                    Students: [
+                        { id: 1, name: 'Alice', age: 20, grade: 'A' },
+                        { id: 2, name: 'Bob', age: 21, grade: 'B' },
+                        { id: 3, name: 'Charlie', age: 19, grade: 'A' }
+                    ]
+                },
+                solution: 'SELECT COUNT(*) FROM Students',
+                hint: 'Use COUNT(*) aggregate function'
+            },
+            {
+                id: 5,
+                title: 'Join Tables',
+                difficulty: 'hard',
+                description: 'Join Students with Enrollments to show student names and their courses.',
+                tables: {
+                    Students: [
+                        { id: 1, name: 'Alice' },
+                        { id: 2, name: 'Bob' }
+                    ],
+                    Enrollments: [
+                        { student_id: 1, course: 'Math' },
+                        { student_id: 2, course: 'Science' }
+                    ]
+                },
+                solution: 'SELECT Students.name, Enrollments.course FROM Students JOIN Enrollments ON Students.id = Enrollments.student_id',
+                hint: 'Use JOIN with ON condition matching ids'
+            },
+            {
+                id: 6,
+                title: 'Group and Average',
+                difficulty: 'hard',
+                description: 'Find the average age of students grouped by grade.',
+                tables: {
+                    Students: [
+                        { id: 1, name: 'Alice', age: 20, grade: 'A' },
+                        { id: 2, name: 'Bob', age: 22, grade: 'B' },
+                        { id: 3, name: 'Charlie', age: 19, grade: 'A' }
+                    ]
+                },
+                solution: 'SELECT grade, AVG(age) FROM Students GROUP BY grade',
+                hint: 'Use GROUP BY grade with AVG(age)'
+            }
+        ];
+        
+        let currentChallenge = null;
+        let completedChallenges = new Set();
+        
+        function initGame() {
+            renderChallengeSelector();
+        }
+        
+        function renderChallengeSelector() {
+            const selector = document.getElementById('challengeSelector');
+            selector.innerHTML = '';
+            
+            challenges.forEach(challenge => {
+                const card = document.createElement('div');
+                card.className = 'challenge-card';
+                if (completedChallenges.has(challenge.id)) {
+                    card.classList.add('completed');
+                }
+                if (currentChallenge && currentChallenge.id === challenge.id) {
+                    card.classList.add('active');
+                }
+                
+                card.innerHTML = `
+                    <div class="challenge-difficulty difficulty-${challenge.difficulty}">
+                        ${challenge.difficulty.toUpperCase()}
+                    </div>
+                    <h4>${challenge.title}</h4>
+                    ${completedChallenges.has(challenge.id) ? '<div style="color: #10b981; font-size: 12px; margin-top: 8px;">✓ Completed</div>' : ''}
+                `;
+                
+                card.onclick = () => loadChallenge(challenge);
+                selector.appendChild(card);
+            });
+            
+            updateScore();
+        }
+        
+        function loadChallenge(challenge) {
+            currentChallenge = challenge;
+            renderChallengeSelector();
+            
+            document.getElementById('challengeDescription').innerHTML = `
+                <strong>${challenge.title}</strong><br><br>
+                ${challenge.description}
+            `;
+            
+            const tableDisplay = document.getElementById('tableDisplay');
+            tableDisplay.innerHTML = '';
+            
+            for (const [tableName, rows] of Object.entries(challenge.tables)) {
+                const tableDiv = document.createElement('div');
+                tableDiv.style.marginTop = '16px';
+                
+                const tableHTML = `
+                    <h5>${tableName}</h5>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                ${Object.keys(rows[0]).map(key => `<th>${key}</th>`).join('')}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rows.map(row => `
+                                <tr>
+                                    ${Object.values(row).map(val => `<td>${val}</td>`).join('')}
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+                
+                tableDiv.innerHTML = tableHTML;
+                tableDisplay.appendChild(tableDiv);
+            }
+            
+            document.getElementById('queryEditor').value = '';
+            document.getElementById('hintBox').classList.remove('show');
+            document.getElementById('resultBox').classList.remove('show');
+        }
+        
+        function runQuery() {
+            if (!currentChallenge) {
+                alert('Please select a challenge first!');
+                return;
+            }
+            
+            const query = document.getElementById('queryEditor').value.trim();
+            const resultBox = document.getElementById('resultBox');
+            
+            if (!query) {
+                showResult('Please write a query!', false);
+                return;
+            }
+            
+            // Simple validation
+            const normalizedQuery = query.replace(/\s+/g, ' ').trim().toLowerCase();
+            const normalizedSolution = currentChallenge.solution.replace(/\s+/g, ' ').trim().toLowerCase();
+            
+            if (normalizedQuery === normalizedSolution || 
+                normalizedQuery.replace(/['"]/g, '') === normalizedSolution.replace(/['"]/g, '')) {
+                completedChallenges.add(currentChallenge.id);
+                showResult('🎉 Correct! Great job!', true);
+                renderChallengeSelector();
+            } else {
+                showResult('❌ Not quite right. Try again or check the hint!', false);
+            }
+        }
+        
+        function showResult(message, success) {
+            const resultBox = document.getElementById('resultBox');
+            resultBox.textContent = message;
+            resultBox.className = `result-box show ${success ? 'success' : 'error'}`;
+        }
+        
+        function showHint() {
+            if (!currentChallenge) return;
+            
+            const hintBox = document.getElementById('hintBox');
+            hintBox.innerHTML = `<strong>💡 Hint:</strong> ${currentChallenge.hint}`;
+            hintBox.classList.add('show');
+        }
+        
+        function resetQuery() {
+            document.getElementById('queryEditor').value = '';
+            document.getElementById('hintBox').classList.remove('show');
+            document.getElementById('resultBox').classList.remove('show');
+        }
+        
+        function updateScore() {
+            document.getElementById('scoreDisplay').textContent = 
+                `${completedChallenges.size} / ${challenges.length}`;
+        }
+        
+        // Initialize game
+        initGame();
+    </script>
+</body>
+</html>

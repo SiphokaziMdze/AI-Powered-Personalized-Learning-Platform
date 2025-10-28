@@ -1,6 +1,4 @@
-# ============================================
-# backend/learning/ai_engine.py (NEW FILE)
-# ============================================
+# backend/learning/ai_engine.py
 """
 AI Engine for Personalized Learning
 Analyzes student performance and adapts content difficulty
@@ -67,12 +65,12 @@ class AILearningEngine:
         performance = self.analyze_performance(course)
         
         # Get recent quiz performance (last 5 attempts)
-        recent_quizzes = QuizAttempt.objects.filter(
-            user=self.user
-        ).order_by('-started_at')[:5]
+        recent_quizzes = QuizAttempt.objects.filter(user=self.user)
         
         if course:
             recent_quizzes = recent_quizzes.filter(quiz__lesson__course=course)
+        
+        recent_quizzes = recent_quizzes.order_by('-started_at')[:5]
         
         recent_scores = [attempt.score for attempt in recent_quizzes]
         recent_avg = sum(recent_scores) / len(recent_scores) if recent_scores else 0
@@ -90,16 +88,17 @@ class AILearningEngine:
     def generate_recommendations(self, course=None):
         """Generate personalized learning recommendations"""
         performance = self.analyze_performance(course)
-        recommendations = []
         
         # Identify weak areas
         weak_lessons = UserProgress.objects.filter(
             user=self.user,
             completion_percentage__lt=50
-        ).order_by('completion_percentage')[:3]
+        )
         
         if course:
             weak_lessons = weak_lessons.filter(course=course)
+        
+        weak_lessons = weak_lessons.order_by('completion_percentage')[:3]
         
         for progress in weak_lessons:
             AIRecommendation.objects.get_or_create(
@@ -113,14 +112,16 @@ class AILearningEngine:
                 }
             )
         
-        # Failed quizzes - need review
+        # Failed quizzes
         failed_quizzes = QuizAttempt.objects.filter(
             user=self.user,
             is_passed=False
-        ).order_by('-started_at')[:2]
+        )
         
         if course:
             failed_quizzes = failed_quizzes.filter(quiz__lesson__course=course)
+        
+        failed_quizzes = failed_quizzes.order_by('-started_at')[:2]
         
         for attempt in failed_quizzes:
             AIRecommendation.objects.get_or_create(
@@ -139,10 +140,12 @@ class AILearningEngine:
             incomplete_lessons = UserProgress.objects.filter(
                 user=self.user,
                 is_completed=False
-            ).order_by('lesson__order')[:2]
+            )
             
             if course:
                 incomplete_lessons = incomplete_lessons.filter(course=course)
+            
+            incomplete_lessons = incomplete_lessons.order_by('lesson__order')[:2]
             
             for progress in incomplete_lessons:
                 AIRecommendation.objects.get_or_create(
@@ -156,8 +159,8 @@ class AILearningEngine:
                     }
                 )
         
-        # Practice recommendations based on performance
-        if performance['quiz_pass_rate'] < 70:
+# Practice recommendations
+        if performance['quiz_pass_rate'] < 70 and course:  # <-- Add "and course" check
             AIRecommendation.objects.get_or_create(
                 user=self.user,
                 course=course,
@@ -168,48 +171,13 @@ class AILearningEngine:
                     'priority': 4
                 }
             )
-        
-        return AIRecommendation.objects.filter(
+        # Return as list
+        recs = AIRecommendation.objects.filter(
             user=self.user,
             is_active=True
         ).order_by('-priority', '-created_at')[:5]
-    
-    def get_adaptive_quiz_questions(self, quiz, num_questions=10):
-        """Generate adaptive quiz based on student performance"""
-        difficulty = self.get_difficulty_level(quiz.lesson.course)
         
-        all_questions = list(quiz.questions.all())
-        
-        # Weight questions based on difficulty level
-        if difficulty == 'very_easy':
-            # More basic questions
-            selected = random.sample(all_questions, min(num_questions, len(all_questions)))
-        elif difficulty == 'easy':
-            # Mix of basic and medium
-            selected = random.sample(all_questions, min(num_questions, len(all_questions)))
-        elif difficulty == 'medium':
-            # Standard mix
-            selected = random.sample(all_questions, min(num_questions, len(all_questions)))
-        else:  # hard
-            # More challenging questions
-            selected = random.sample(all_questions, min(num_questions, len(all_questions)))
-        
-        return selected
-    
-    def predict_time_to_complete(self, lesson):
-        """Predict how long student will need for a lesson"""
-        performance = self.analyze_performance(lesson.course)
-        
-        # Base time estimation (minutes)
-        base_time = 30
-        
-        # Adjust based on performance level
-        if performance['level'] == 'advanced':
-            return base_time * 0.7  # Faster completion
-        elif performance['level'] == 'intermediate':
-            return base_time
-        else:
-            return base_time * 1.3  # More time needed
+        return list(recs)
     
     def get_learning_insights(self):
         """Generate learning insights and patterns"""
@@ -221,7 +189,6 @@ class AILearningEngine:
         
         peak_hour = progress_data.first()['last_accessed__hour'] if progress_data else 9
         
-        # Determine learning pattern
         if 6 <= peak_hour < 12:
             pattern = 'Morning Learner'
         elif 12 <= peak_hour < 17:
@@ -229,7 +196,6 @@ class AILearningEngine:
         else:
             pattern = 'Evening Learner'
         
-        # Get strongest and weakest areas
         course_performance = {}
         for course in Course.objects.filter(is_published=True):
             perf = self.analyze_performance(course)
@@ -247,7 +213,7 @@ class AILearningEngine:
         }
     
     def calculate_learning_velocity(self):
-        """Calculate how fast student is learning compared to average"""
+        """Calculate how fast student is learning"""
         last_30_days = timezone.now() - timedelta(days=30)
         
         user_completion = UserProgress.objects.filter(
@@ -256,7 +222,6 @@ class AILearningEngine:
             is_completed=True
         ).count()
         
-        # Average completion (mock data - replace with actual average)
         avg_completion = 5
         
         if avg_completion > 0:

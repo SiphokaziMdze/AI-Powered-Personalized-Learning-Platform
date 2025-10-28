@@ -1,0 +1,1028 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <style>
+        .ai-dashboard-container {
+            max-width: 1400px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+        
+        .dashboard-header {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            padding: 40px;
+            border-radius: 20px;
+            margin-bottom: 32px;
+            text-align: center;
+        }
+        
+        .dashboard-header h1 {
+            margin: 0 0 16px;
+            font-size: 36px;
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+        
+        .metric-card {
+            background: var(--card);
+            border: 1px solid var(--ring);
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+        }
+        
+        .metric-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+        
+        .metric-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 8px;
+        }
+        
+        .metric-label {
+            color: var(--muted);
+            font-size: 14px;
+        }
+        
+        .metric-sublabel {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 8px;
+        }
+        
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+        
+        @media (max-width: 968px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .card {
+            background: var(--card);
+            border: 1px solid var(--ring);
+            border-radius: 16px;
+            padding: 24px;
+        }
+        
+        .card h3 {
+            margin: 0 0 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .course-analysis {
+            margin-bottom: 24px;
+            padding: 20px;
+            background: rgba(99,102,241,0.05);
+            border-radius: 12px;
+            border: 1px solid var(--ring);
+        }
+        
+        .course-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .course-title {
+            font-size: 18px;
+            font-weight: 700;
+        }
+        
+        .difficulty-badge {
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .difficulty-easy { background: #10b981; color: white; }
+        .difficulty-medium { background: #f59e0b; color: white; }
+        .difficulty-hard { background: #ef4444; color: white; }
+        .difficulty-very_easy { background: #6ee7b7; color: #065f46; }
+        
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-top: 16px;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 12px;
+            background: var(--background);
+            border-radius: 8px;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--accent);
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+        
+        .insight-card {
+            padding: 16px;
+            background: linear-gradient(135deg, rgba(99,102,241,0.1), rgba(139,92,246,0.1));
+            border-radius: 12px;
+            margin-bottom: 16px;
+            border: 1px solid rgba(99,102,241,0.3);
+        }
+        
+        .insight-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+        
+        .insight-icon {
+            font-size: 24px;
+        }
+        
+        .insight-title {
+            font-weight: 700;
+        }
+        
+        .recommendation-item {
+            padding: 16px;
+            background: var(--background);
+            border-radius: 12px;
+            margin-bottom: 12px;
+            border-left: 4px solid var(--accent);
+        }
+        
+        .rec-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .rec-title {
+            font-weight: 700;
+        }
+        
+        .priority-badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        
+        .priority-5, .priority-4 { background: #fee2e2; color: #991b1b; }
+        .priority-3 { background: #fef3c7; color: #92400e; }
+        .priority-2, .priority-1 { background: #dbeafe; color: #1e40af; }
+        
+        .progress-ring {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto;
+        }
+        
+        .progress-ring-circle {
+            transition: stroke-dashoffset 1s ease;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+        
+        .level-badge {
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: 600;
+            margin-top: 12px;
+        }
+        
+        .level-beginner { background: #dbeafe; color: #1e40af; }
+        .level-intermediate { background: #fef3c7; color: #92400e; }
+        .level-advanced { background: #d1fae5; color: #065f46; }
+        
+        .back-button {
+            margin-bottom: 24px;
+        }
+        
+        /* AI Chat Widget */
+        .ai-chat-widget {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 380px;
+            max-height: 600px;
+            background: var(--card);
+            border: 2px solid var(--ring);
+            border-radius: 20px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+            display: none;
+            flex-direction: column;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+        
+        .ai-chat-widget.open {
+            display: flex;
+        }
+        
+        .chat-widget-header {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            padding: 20px;
+            border-radius: 18px 18px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .chat-widget-body {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            max-height: 400px;
+        }
+        
+        .chat-message {
+            margin-bottom: 16px;
+            display: flex;
+            gap: 12px;
+            animation: slideIn 0.3s ease;
+        }
+        
+        .chat-message.ai {
+            flex-direction: row;
+        }
+        
+        .chat-message.user {
+            flex-direction: row-reverse;
+        }
+        
+        .chat-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+        
+        .chat-avatar.ai {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        }
+        
+        .chat-avatar.user {
+            background: var(--accent-2);
+        }
+        
+        .chat-bubble {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 16px;
+            line-height: 1.5;
+        }
+        
+        .chat-message.ai .chat-bubble {
+            background: rgba(99,102,241,0.1);
+            border: 1px solid rgba(99,102,241,0.3);
+        }
+        
+        .chat-message.user .chat-bubble {
+            background: var(--accent);
+            color: white;
+        }
+        
+        .chat-widget-input {
+            padding: 16px;
+            border-top: 1px solid var(--ring);
+            display: flex;
+            gap: 12px;
+        }
+        
+        .chat-input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid var(--ring);
+            border-radius: 12px;
+            background: var(--background);
+            color: var(--text);
+        }
+        
+        .chat-send-btn {
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        
+        .ai-float-button {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            box-shadow: 0 8px 24px rgba(99,102,241,0.4);
+            z-index: 999;
+            transition: all 0.3s ease;
+            animation: pulse 2s infinite;
+        }
+        
+        .ai-float-button:hover {
+            transform: scale(1.1);
+        }
+        
+        .ai-float-button.hidden {
+            display: none;
+        }
+        
+        .typing-indicator {
+            display: none;
+            padding: 12px 16px;
+            background: rgba(99,102,241,0.1);
+            border-radius: 16px;
+            width: fit-content;
+        }
+        
+        .typing-indicator.active {
+            display: block;
+        }
+        
+        .typing-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent);
+            margin: 0 2px;
+            animation: typing 1.4s infinite;
+        }
+        
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        .live-stat {
+            position: relative;
+        }
+        
+        .stat-trend {
+            font-size: 12px;
+            margin-top: 4px;
+        }
+        
+        .trend-up {
+            color: #10b981;
+        }
+        
+        .trend-down {
+            color: #ef4444;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+                opacity: 0.7;
+            }
+            30% {
+                transform: translateY(-10px);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 8px 24px rgba(99,102,241,0.4);
+            }
+            50% {
+                box-shadow: 0 8px 32px rgba(99,102,241,0.7);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .ai-chat-widget {
+                width: calc(100% - 32px);
+                bottom: 16px;
+                right: 16px;
+                left: 16px;
+            }
+            
+            .ai-float-button {
+                width: 56px;
+                height: 56px;
+                font-size: 24px;
+            }
+        }
+        
+        /* Study Timer */
+        .study-timer {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            background: var(--card);
+            border: 2px solid var(--ring);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+            z-index: 998;
+            min-width: 200px;
+        }
+        
+        .timer-display {
+            font-size: 36px;
+            font-weight: 700;
+            text-align: center;
+            color: var(--accent);
+            margin: 12px 0;
+            font-variant-numeric: tabular-nums;
+        }
+        
+        .timer-controls {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        
+        .timer-btn {
+            flex: 1;
+            padding: 8px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .timer-btn.start {
+            background: #10b981;
+            color: white;
+        }
+        
+        .timer-btn.pause {
+            background: #f59e0b;
+            color: white;
+        }
+        
+        .timer-btn.reset {
+            background: var(--ring);
+            color: var(--text);
+        }
+        
+        /* Achievement Toast */
+        .achievement-toast {
+            position: fixed;
+            top: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            padding: 20px 32px;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(16, 185, 129, 0.4);
+            z-index: 1001;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            opacity: 0;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .achievement-toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+        
+        .achievement-icon {
+            font-size: 48px;
+            animation: bounce 0.6s ease infinite;
+        }
+        
+        .achievement-text h3 {
+            margin: 0 0 4px;
+            font-size: 18px;
+        }
+        
+        .achievement-text p {
+            margin: 0;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        /* Progress Charts */
+        .chart-container {
+            margin: 24px 0;
+            padding: 20px;
+            background: var(--background);
+            border-radius: 12px;
+            position: relative;
+            height: 200px;
+        }
+        
+        .progress-chart {
+            width: 100%;
+            height: 100%;
+        }
+        
+        /* Voice Input */
+        .voice-btn {
+            position: relative;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--accent);
+            border: none;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        
+        .voice-btn:hover {
+            transform: scale(1.1);
+        }
+        
+        .voice-btn.recording {
+            background: #ef4444;
+            animation: pulse-red 1s infinite;
+        }
+        
+        @keyframes pulse-red {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+            }
+            50% {
+                box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+            }
+        }
+        
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0) scale(1);
+            }
+            50% {
+                transform: translateY(-10px) scale(1.1);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="ai-dashboard-container">
+        <div class="back-button">
+            <a href="{% url 'frontend:dashboard' %}" class="btn-secondary">← Back to Dashboard</a>
+        </div>
+        
+        <div class="dashboard-header">
+            <h1>🤖 AI Analytics Dashboard</h1>
+            <p>Your personalized learning insights powered by artificial intelligence</p>
+            <div style="margin-top: 16px; font-size: 14px; opacity: 0.9;">
+                <span id="liveUpdate">🔴 Live AI Analysis</span>
+            </div>
+        </div>
+        
+        <!-- Study Timer Widget -->
+        <div class="study-timer">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <strong>⏱️ Study Timer</strong>
+                <button onclick="toggleTimer()" style="background: none; border: none; cursor: pointer; font-size: 16px;">−</button>
+            </div>
+            <div class="timer-display" id="timerDisplay">00:00:00</div>
+            <div class="timer-controls">
+                <button class="timer-btn start" id="startBtn" onclick="startTimer()">Start</button>
+                <button class="timer-btn pause" id="pauseBtn" onclick="pauseTimer()" style="display: none;">Pause</button>
+                <button class="timer-btn reset" onclick="resetTimer()">Reset</button>
+            </div>
+            <div style="font-size: 12px; color: var(--muted); text-align: center; margin-top: 8px;">
+                Total today: <span id="todayTotal">00:00:00</span>
+            </div>
+        </div>
+        
+        <!-- Achievement Toast -->
+        <div class="achievement-toast" id="achievementToast">
+            <div class="achievement-icon">🏆</div>
+            <div class="achievement-text">
+                <h3 id="achievementTitle">Achievement Unlocked!</h3>
+                <p id="achievementDesc">You've earned a new badge</p>
+            </div>
+        </div>
+        
+        <!-- Overall Performance Metrics -->
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-icon">📊</div>
+                <div class="metric-value">{{ overall_performance.avg_score|floatformat:1 }}%</div>
+                <div class="metric-label">Average Score</div>
+                <div class="metric-sublabel">Across all quizzes</div>
+            </div>
+            
+            <div class="metric-card">
+                <div class="metric-icon">✅</div>
+                <div class="metric-value">{{ overall_performance.completion_rate|floatformat:1 }}%</div>
+                <div class="metric-label">Completion Rate</div>
+                <div class="metric-sublabel">{{ overall_performance.completed_lessons }}/{{ overall_performance.total_lessons }} lessons</div>
+            </div>
+            
+            <div class="metric-card">
+                <div class="metric-icon">🎯</div>
+                <div class="metric-value">{{ overall_performance.quiz_pass_rate|floatformat:1 }}%</div>
+                <div class="metric-label">Quiz Pass Rate</div>
+                <div class="metric-sublabel">{{ overall_performance.total_quizzes }} attempts</div>
+            </div>
+            
+            <div class="metric-card">
+                <div class="metric-icon">🎓</div>
+                <div class="metric-value">{{ overall_performance.level|title }}</div>
+                <div class="metric-label">Current Level</div>
+                <span class="level-badge level-{{ overall_performance.level }}">{{ overall_performance.level|upper }}</span>
+            </div>
+        </div>
+        
+        <!-- Main Content Grid -->
+        <div class="content-grid">
+            <!-- Left Column - Course Analytics -->
+            <div>
+                <div class="card">
+                    <h3>📚 Course Performance Analysis</h3>
+                    
+                    {% for analytics in course_analytics %}
+                    <div class="course-analysis">
+                        <div class="course-header">
+                            <div class="course-title">{{ analytics.course.title }}</div>
+                            <span class="difficulty-badge difficulty-{{ analytics.difficulty_level }}">
+                                {{ analytics.difficulty_level|upper }}
+                            </span>
+                        </div>
+                        
+                        <div class="stats-row">
+                            <div class="stat-item">
+                                <div class="stat-value">{{ analytics.performance.avg_score|floatformat:0 }}%</div>
+                                <div class="stat-label">Avg Score</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">{{ analytics.performance.completion_rate|floatformat:0 }}%</div>
+                                <div class="stat-label">Complete</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">{{ analytics.performance.completed_lessons }}</div>
+                                <div class="stat-label">Lessons Done</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">{{ analytics.performance.quiz_pass_rate|floatformat:0 }}%</div>
+                                <div class="stat-label">Pass Rate</div>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p style="text-align: center; color: var(--muted); padding: 32px;">
+                        No course data available yet. Start learning to see your analytics!
+                    </p>
+                    {% endfor %}
+                </div>
+                
+                <!-- Learning Insights -->
+                <div class="card" style="margin-top: 24px;">
+                    <h3>💡 Learning Insights</h3>
+                    
+                    <div class="insight-card">
+                        <div class="insight-header">
+                            <div class="insight-icon">⏰</div>
+                            <div class="insight-title">Study Pattern</div>
+                        </div>
+                        <p style="color: var(--muted); margin: 0;">
+                            You're a <strong>{{ insights.pattern }}</strong> - most active around {{ insights.peak_hour }}:00
+                        </p>
+                    </div>
+                    
+                    <div class="insight-card">
+                        <div class="insight-header">
+                            <div class="insight-icon">📈</div>
+                            <div class="insight-title">Learning Velocity</div>
+                        </div>
+                        <p style="color: var(--muted); margin: 0;">
+                            You're learning at <strong>{{ insights.learning_velocity }}x</strong> the average pace
+                            {% if insights.learning_velocity >= 1.2 %}
+                            - Keep up the excellent work! 🚀
+                            {% elif insights.learning_velocity >= 0.8 %}
+                            - You're on track! 👍
+                            {% else %}
+                            - Try to study more regularly 💪
+                            {% endif %}
+                        </p>
+                    </div>
+                    
+                    <div class="insight-card">
+                        <div class="insight-header">
+                            <div class="insight-icon">💪</div>
+                            <div class="insight-title">Strongest Area</div>
+                        </div>
+                        <p style="color: var(--muted); margin: 0;">
+                            <strong>{{ insights.strongest_area }}</strong> - You excel here!
+                        </p>
+                    </div>
+                    
+                    <div class="insight-card">
+                        <div class="insight-header">
+                            <div class="insight-icon">🎯</div>
+                            <div class="insight-title">Focus Area</div>
+                        </div>
+                        <p style="color: var(--muted); margin: 0;">
+                            <strong>{{ insights.weakest_area }}</strong> - Consider spending more time here
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right Column - Recommendations -->
+            <div>
+                <div class="card">
+                    <h3>🎯 AI Recommendations</h3>
+                    
+                    {% for rec in recommendations %}
+                    <div class="recommendation-item">
+                        <div class="rec-header">
+                            <div class="rec-title">{{ rec.title }}</div>
+                            <span class="priority-badge priority-{{ rec.priority }}">
+                                Priority {{ rec.priority }}
+                            </span>
+                        </div>
+                        <p style="color: var(--muted); font-size: 14px; margin: 8px 0 0;">
+                            {{ rec.description }}
+                        </p>
+                    </div>
+                    {% empty %}
+                    <p style="text-align: center; color: var(--muted); padding: 32px;">
+                        Great job! No urgent recommendations at the moment. Keep up the good work! 🎉
+                    </p>
+                    {% endfor %}
+                </div>
+                
+                <!-- Quick Actions -->
+                <div class="card" style="margin-top: 24px;">
+                    <h3>⚡ Quick Actions</h3>
+                    <div style="display: grid; gap: 12px;">
+                        <a href="{% url 'learning:ai_chatbot' %}" class="btn-primary full-width">
+                            🤖 Ask AI Tutor
+                        </a>
+                        <a href="{% url 'learning:games_list' %}" class="btn-secondary full-width">
+                            🎮 Play Learning Games
+                        </a>
+                        <a href="{% url 'learning:course_list' %}" class="btn-secondary full-width">
+                            📚 Browse Courses
+                        </a>
+                        <a href="{% url 'frontend:dashboard' %}" class="btn-secondary full-width">
+                            📊 Main Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- AI Chat Widget -->
+    <button class="ai-float-button" id="aiFloatBtn" onclick="toggleChat()">
+        🤖
+    </button>
+    
+    <div class="ai-chat-widget" id="aiChatWidget">
+        <div class="chat-widget-header">
+            <div>
+                <strong>AI Learning Assistant</strong>
+                <div style="font-size: 12px; opacity: 0.9;">Ask me anything!</div>
+            </div>
+            <button onclick="toggleChat()" style="background: none; border: none; color: white; font-size: 24px; cursor: pointer;">×</button>
+        </div>
+        
+        <div class="chat-widget-body" id="chatBody">
+            <div class="chat-message ai">
+                <div class="chat-avatar ai">🤖</div>
+                <div class="chat-bubble">
+                    Hi! I'm your AI learning assistant. I've analyzed your performance and I'm here to help! Ask me about:
+                    <ul style="margin: 8px 0; padding-left: 20px;">
+                        <li>Study recommendations</li>
+                        <li>Your progress</li>
+                        <li>Topic explanations</li>
+                        <li>Learning strategies</li>
+                    </ul>
+                    What would you like to know?
+                </div>
+            </div>
+            
+            <div class="typing-indicator" id="typingIndicator">
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            </div>
+        </div>
+        
+        <div class="chat-widget-input">
+            <input type="text" class="chat-input" id="chatInput" placeholder="Type your question..." 
+                   onkeypress="if(event.key==='Enter') sendMessage()">
+            <button class="chat-send-btn" onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+    
+    <script>
+        // AI Chat functionality
+        function toggleChat() {
+            const widget = document.getElementById('aiChatWidget');
+            const btn = document.getElementById('aiFloatBtn');
+            
+            if (widget.classList.contains('open')) {
+                widget.classList.remove('open');
+                btn.classList.remove('hidden');
+            } else {
+                widget.classList.add('open');
+                btn.classList.add('hidden');
+                document.getElementById('chatInput').focus();
+            }
+        }
+        
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            // Add user message
+            addMessage(message, 'user');
+            input.value = '';
+            
+            // Show typing indicator
+            const typing = document.getElementById('typingIndicator');
+            typing.classList.add('active');
+            
+            try {
+                const response = await fetch('{% url "learning:ai_chatbot" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({ message: message })
+                });
+                
+                const data = await response.json();
+                
+                typing.classList.remove('active');
+                
+                if (data.response) {
+                    addMessage(data.response, 'ai');
+                } else {
+                    addMessage('Sorry, I encountered an error. Please try again.', 'ai');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                typing.classList.remove('active');
+                addMessage('Sorry, I\'m having trouble connecting. Please try again.', 'ai');
+            }
+        }
+        
+        function addMessage(text, type) {
+            const chatBody = document.getElementById('chatBody');
+            const typing = document.getElementById('typingIndicator');
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chat-message ${type}`;
+            
+            const avatar = document.createElement('div');
+            avatar.className = `chat-avatar ${type}`;
+            avatar.textContent = type === 'ai' ? '🤖' : '👤';
+            
+            const bubble = document.createElement('div');
+            bubble.className = 'chat-bubble';
+            bubble.textContent = text;
+            
+            messageDiv.appendChild(avatar);
+            messageDiv.appendChild(bubble);
+            
+            chatBody.insertBefore(messageDiv, typing);
+            chatBody.scrollTop = chatBody.scrollHeight;
+        }
+        
+        // Live update indicator
+        let liveUpdateDot = true;
+        setInterval(() => {
+            const indicator = document.getElementById('liveUpdate');
+            if (indicator) {
+                liveUpdateDot = !liveUpdateDot;
+                indicator.textContent = liveUpdateDot ? '🔴 Live AI Analysis' : '⚫ Live AI Analysis';
+            }
+        }, 1000);
+        
+        // Simulate real-time performance tracking
+        function updateLiveStats() {
+            // Add subtle animations to metrics when they update
+            const metrics = document.querySelectorAll('.metric-value');
+            metrics.forEach(metric => {
+                metric.style.transform = 'scale(1.05)';
+                setTimeout(() => {
+                    metric.style.transform = 'scale(1)';
+                }, 200);
+            });
+        }
+        
+        // Auto-update stats every 30 seconds (simulated)
+        setInterval(updateLiveStats, 30000);
+        
+        // Initialize - add AI greeting after a moment
+        setTimeout(() => {
+            const chatBody = document.getElementById('chatBody');
+            if (chatBody && chatBody.children.length === 2) { // Only initial message
+                addMessage('💡 Tip: Based on your recent activity, I recommend focusing on {{ insights.weakest_area }} to improve your overall performance!', 'ai');
+            }
+        }, 3000);
+        
+        // Add contextual suggestions based on time
+        const hour = new Date().getHours();
+        setTimeout(() => {
+            let timeMessage = '';
+            if (hour >= 6 && hour < 12) {
+                timeMessage = '☀️ Good morning! Great time to tackle challenging topics when your mind is fresh!';
+            } else if (hour >= 12 && hour < 17) {
+                timeMessage = '🌤️ Good afternoon! Perfect time for practice exercises and reviewing concepts.';
+            } else if (hour >= 17 && hour < 22) {
+                timeMessage = '🌙 Good evening! Ideal for lighter review and consolidating what you learned today.';
+            } else {
+                timeMessage = '🌃 Late night study session? Remember to take breaks and stay hydrated!';
+            }
+            
+            if (document.getElementById('chatBody').children.length < 5) {
+                addMessage(timeMessage, 'ai');
+            }
+        }, 6000);
+    </script>
+</body>
+</html>

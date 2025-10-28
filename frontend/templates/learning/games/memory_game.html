@@ -1,0 +1,208 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Match - Learning Game</title>
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <style>
+        .game-container {
+            max-width: 700px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+        
+        .game-header {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            padding: 24px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+        
+        .game-header h2 {
+            margin: 0 0 16px 0;
+        }
+        
+        .game-stats {
+            display: flex;
+            justify-content: center;
+            gap: 32px;
+            font-size: 18px;
+        }
+        
+        .back-btn {
+            margin-top: 16px;
+            padding: 8px 24px;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+        }
+        
+        .memory-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .memory-card {
+            aspect-ratio: 1;
+            background: var(--card);
+            border: 2px solid var(--ring);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .memory-card:hover {
+            transform: scale(1.05);
+            border-color: var(--accent);
+        }
+        
+        .memory-card.flipped {
+            background: linear-gradient(135deg, rgba(99,102,241,0.2), rgba(139,92,246,0.2));
+            border-color: var(--accent);
+        }
+        
+        .memory-card.matched {
+            background: linear-gradient(135deg, rgba(16,185,129,0.2), rgba(5,150,105,0.2));
+            border-color: #10b981;
+            cursor: default;
+            animation: matchPulse 0.5s ease;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+        }
+        
+        .control-btn {
+            padding: 12px 32px;
+            background: var(--card);
+            border: 2px solid var(--ring);
+            border-radius: 12px;
+            color: var(--text);
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .control-btn:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+        
+        @keyframes matchPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <h2>🧠 Memory Match</h2>
+            <div class="game-stats">
+                <span>Moves: <span id="memoryMoves">0</span></span>
+                <span>Matches: <span id="memoryMatches">0</span>/8</span>
+            </div>
+            <a href="{% url 'learning:games_list' %}" class="back-btn">Exit</a>
+        </div>
+        
+        <div class="memory-grid" id="memoryGrid"></div>
+        
+        <div class="controls">
+            <button class="control-btn" onclick="memoryGame.reset()">New Game</button>
+            <a href="{% url 'learning:games_list' %}" class="btn-secondary">Back to Games</a>
+        </div>
+    </div>
+
+    <script>
+        const memoryGame = {
+            cards: ['🐍', '💾', '🗄️', '⚙️', '🔧', '📊', '🎯', '🔥'],
+            gameCards: [],
+            flippedCards: [],
+            matchedPairs: 0,
+            moves: 0,
+
+            init() {
+                this.reset();
+            },
+
+            reset() {
+                this.gameCards = [...this.cards, ...this.cards].sort(() => Math.random() - 0.5);
+                this.flippedCards = [];
+                this.matchedPairs = 0;
+                this.moves = 0;
+                this.updateStats();
+                this.renderGrid();
+            },
+
+            renderGrid() {
+                const grid = document.getElementById('memoryGrid');
+                grid.innerHTML = '';
+                this.gameCards.forEach((card, index) => {
+                    const cardEl = document.createElement('div');
+                    cardEl.className = 'memory-card';
+                    cardEl.dataset.index = index;
+                    cardEl.textContent = '?';
+                    cardEl.onclick = () => this.flipCard(index);
+                    grid.appendChild(cardEl);
+                });
+            },
+
+            flipCard(index) {
+                if (this.flippedCards.length === 2) return;
+                const cardEl = document.querySelectorAll('.memory-card')[index];
+                if (cardEl.classList.contains('flipped') || cardEl.classList.contains('matched')) return;
+
+                cardEl.classList.add('flipped');
+                cardEl.textContent = this.gameCards[index];
+                this.flippedCards.push({index, value: this.gameCards[index], element: cardEl});
+
+                if (this.flippedCards.length === 2) {
+                    this.moves++;
+                    this.updateStats();
+                    setTimeout(() => this.checkMatch(), 500);
+                }
+            },
+
+            checkMatch() {
+                const [card1, card2] = this.flippedCards;
+                if (card1.value === card2.value) {
+                    card1.element.classList.add('matched');
+                    card2.element.classList.add('matched');
+                    this.matchedPairs++;
+                    this.updateStats();
+                    if (this.matchedPairs === 8) {
+                        setTimeout(() => alert(`🎉 You won in ${this.moves} moves!`), 300);
+                    }
+                } else {
+                    card1.element.classList.remove('flipped');
+                    card2.element.classList.remove('flipped');
+                    card1.element.textContent = '?';
+                    card2.element.textContent = '?';
+                }
+                this.flippedCards = [];
+            },
+
+            updateStats() {
+                document.getElementById('memoryMoves').textContent = this.moves;
+                document.getElementById('memoryMatches').textContent = this.matchedPairs;
+            }
+        };
+
+        memoryGame.init();
+    </script>
+</body>
+</html

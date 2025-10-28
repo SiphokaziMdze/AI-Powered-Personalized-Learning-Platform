@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduCore AI - Learning Games</title>
+    <style>
+        :root {
+            --bg: #0f1117;
+            --card: #1a1d2e;
+            --accent: #6366f1;
+            --accent-2: #8b5cf6;
+            --text: #e2e8f0;
+            --muted: #94a3b8;
+            --success: #10b981;
+            --danger: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 2rem;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 2rem;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 2.5rem;
+        }
+
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .game-card {
+            background: var(--card);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 16px;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .game-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);
+        }
+
+        .game-icon {
+            font-size: 3rem;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .game-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .game-desc {
+            color: var(--muted);
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .play-btn {
+            width: 100%;
+            padding: 0.75rem;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            color: #0b1020;
+            border: none;
+            border-radius: 50px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .play-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(99, 102, 241, 0.4);
+        }
+
+        .game-container {
+            display: none;
+            background: var(--card);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .game-container.active {
+            display: block;
+        }
+
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .game-stats {
+            display: flex;
+            gap: 2rem;
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        .back-btn {
+            padding: 0.5rem 1.5rem;
+            background: var(--danger);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        canvas {
+            display: block;
+            margin: 0 auto;
+            background: #0b0e14;
+            border: 2px solid var(--accent);
+            border-radius: 8px;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            padding: 0.75rem 1.5rem;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .control-btn:hover {
+            background: var(--accent-2);
+        }
+
+        .game-over {
+            text-align: center;
+            padding: 2rem;
+            display: none;
+        }
+
+        .game-over.show {
+            display: block;
+        }
+
+        .game-over h2 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: var(--danger);
+        }
+
+        .quiz-question {
+            font-size: 1.3rem;
+            text-align: center;
+            margin: 2rem 0;
+            padding: 1.5rem;
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: 12px;
+        }
+
+        .quiz-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .quiz-option {
+            padding: 1.5rem;
+            background: var(--card);
+            border: 2px solid var(--accent);
+            border-radius: 12px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s ease;
+            font-size: 1.1rem;
+        }
+
+        .quiz-option:hover {
+            background: var(--accent);
+            color: #0b1020;
+            transform: scale(1.05);
+        }
+
+        .quiz-option.correct {
+            background: var(--success);
+            color: white;
+            border-color: var(--success);
+        }
+
+        .quiz-option.wrong {
+            background: var(--danger);
+            color: white;
+            border-color: var(--danger);
+        }
+
+        .memory-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 100px);
+            gap: 10px;
+            justify-content: center;
+            margin: 2rem auto;
+        }
+
+        .memory-card {
+            width: 100px;
+            height: 100px;
+            background: var(--accent);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .memory-card.flipped {
+            background: var(--card);
+            border: 2px solid var(--accent);
+        }
+
+        .memory-card.matched {
+            background: var(--success);
+            cursor: default;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            canvas {
+                max-width: 100%;
+            }
+
+            .memory-grid {
+                grid-template-columns: repeat(4, 70px);
+            }
+
+            .memory-card {
+                width: 70px;
+                height: 70px;
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 EduCore AI - Learning Games</h1>
+
+        <!-- Game Selection -->
+        <div class="games-grid" id="gameSelection">
+            <div class="game-card" onclick="startGame('snake')">
+                <div class="game-icon">🐍</div>
+                <div class="game-title">Code Snake</div>
+                <div class="game-desc">Practice logic and planning. Collect apples to grow!</div>
+                <button class="play-btn">Play Now</button>
+            </div>
+
+            <div class="game-card" onclick="startGame('memory')">
+                <div class="game-icon">🧠</div>
+                <div class="game-title">Memory Match</div>
+                <div class="game-desc">Improve your memory with programming symbols!</div>
+                <button class="play-btn">Play Now</button>
+            </div>
+
+            <div class="game-card" onclick="startGame('quiz')">
+                <div class="game-icon">❓</div>
+                <div class="game-title">Quick Quiz</div>
+                <div class="game-desc">Test your knowledge with rapid-fire questions!</div>
+                <button class="play-btn">Play Now</button>
+            </div>
+
+            <div class="game-card" onclick="startGame('typing')">
+                <div class="game-icon">⌨️</div>
+                <div class="game-title">Code Typer</div>
+                <div class="game-desc">Improve typing speed with code snippets!</div>
+                <button class="play-btn">Play Now</button>
+            </div>
+        </div>
+
+        <!-- Snake Game -->
+        <div class="game-container" id="snakeGame">
+            <div class="game-header">
+                <h2>🐍 Code Snake</h2>
+                <div class="game-stats">
+                    <span>Score: <span id="snakeScore">0</span></span>
+                    <span>High: <span id="snakeHigh">0</span></span>
+                </div>
+                <button class="back-btn" onclick="backToMenu()">Exit</button>
+            </div>
+            <canvas id="snakeCanvas" width="400" height="400"></canvas>
+            <div class="controls">
+                <button class="control-btn" onclick="snakeGame.changeDirection('UP')">↑</button>
+                <button class="control-btn" onclick="snakeGame.changeDirection('DOWN')">↓</button>
+                <button class="control-btn" onclick="snakeGame.changeDirection('LEFT')">←</button>
+                <button class="control-btn" onclick="snakeGame.changeDirection('RIGHT')">→</button>
+                <button class="control-btn" onclick="snakeGame.reset()">Restart</button>
+            </div>
+            <div class="game-over" id="snakeGameOver">
+                <h2>Game Over!</h2>
+                <p style="font-size: 1.5rem; margin: 1rem 0;">Final Score: <span id="finalScore">0</span></p>
+                <button class="control-btn" onclick="snakeGame.reset()">Play Again</button>
+            </div>
+        </div>
+
+        <!-- Memory Match Game -->
+        <div class="game-container" id="memoryGame">
+            <div class="game-header">
+                <h2>🧠 Memory Match</h2>
+                <div class="game-stats">
+                    <span>Moves: <span id="memoryMoves">0</span></span>
+                    <span>Matches: <span id="memoryMatches">0</span>/8</span>
+                </div>
+                <button class="back-btn" onclick="backToMenu()">Exit</button>
+            </div>
+            <div class="memory-grid" id="memoryGrid"></div>
+            <div class="controls">
+                <button class="control-btn" onclick="memoryGame.reset()">New Game</button>
+            </div>
+        </div>
+
+        <!-- Quiz Game -->
+        <div class="game-container" id="quizGame">
+            <div class="game-header">
+                <h2>❓ Quick Quiz</h2>
+                <div class="game-stats">
+                    <span>Score: <span id="quizScore">0</span></span>
+                    <span>Question: <span id="quizCurrent">1</span>/10</span>
+                </div>
+                <button class="back-btn" onclick="backToMenu()">Exit</button>
+            </div>
+            <div class="quiz-question" id="quizQuestion">Loading...</div>
+            <div class="quiz-options" id="quizOptions"></div>
+            <div class="game-over" id="quizGameOver">
+                <h2>Quiz Complete!</h2>
+                <p style="font-size: 1.5rem; margin: 1rem 0;">Final Score: <span id="quizFinalScore">0</span>/10</p>
+                <button class="control-btn" onclick="quizGame.reset()">Play Again</button>
+            </div>
+        </div>
+
+        <!-- Typing Game -->
+        <div class="game-container" id="typingGame">
+            <div class="game-header">
+                <h2>⌨️ Code Typer</h2>
+                <div class="game-stats">
+                    <span>WPM: <span id="typingWPM">0</span></span>
+                    <span>Accuracy: <span id="typingAccuracy">100</span>%</span>
+                    <span>Time: <span id="typingTime">60</span>s</span>
+                </div>
+                <button class="back-btn" onclick="backToMenu()">Exit</button>
+            </div>
+            <div style="padding: 2rem; background: rgba(99, 102, 241, 0.1); border-radius: 12px; margin: 2rem 0;">
+                <div id="typingText" style="font-family: monospace; font-size: 1.2rem; line-height: 1.8; margin-bottom: 1.5rem;"></div>
+                <input type="text" id="typingInput" placeholder="Start typing..." 
+                       style="width: 100%; padding: 1rem; font-size: 1rem; border-radius: 8px; border: 2px solid var(--accent); background: var(--bg); color: var(--text);">
+            </div>
+            <div class="controls">
+                <button class="control-btn" onclick="typingGame.reset()">New Text</button>
+            </div>
+            <div class="game-over" id="typingGameOver">
+                <h2>Time's Up!</h2>
+                <p style="font-size: 1.2rem; margin: 1rem 0;">
+                    WPM: <span id="finalWPM">0</span><br>
+                    Accuracy: <span id="finalAccuracy">0</span>%<br>
+                    Characters: <span id="finalChars">0</span>
+                </p>
+                <button class="control-btn" onclick="typingGame.reset()">Try Again</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== SNAKE GAME ====================
+        const snakeGame = {
+            canvas: null,
+            ctx: null,
+            gridSize: 20,
+            tileCount: 20,
+            snake: [],
+            food: {},
+            dx: 0,
+            dy: 0,
+            score: 0,
+            highScore: localStorage.getItem('snakeHigh') || 0,
+            gameLoop: null,
+            isRunning: false,
+
+            init() {
+                this.canvas = document.getElementById('snakeCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                document.getElementById('snakeHigh').textContent = this.highScore;
+                this.reset();
+            },
+
+            reset() {
+                document.getElementById('snakeGameOver').classList.remove('show');
+                this.snake = [{x: 10, y: 10}];
+                this.dx = 1;
+                this.dy = 0;
+                this.score = 0;
+                this.updateScore();
+                this.spawnFood();
+                this.isRunning = true;
+                if (this.gameLoop) clearInterval(this.gameLoop);
+                this.gameLoop = setInterval(() => this.update(), 150);
+            },
+
+            update() {
+                if (!this.isRunning) return;
+
+                const head = {x: this.snake[0].x + this.dx, y: this.snake[0].y + this.dy};
+
+                // Check collision with walls
+                if (head.x < 0 || head.x >= this.tileCount || head.y < 0 || head.y >= this.tileCount) {
+                    this.gameOver();
+                    return;
+                }
+
+                // Check collision with self
+                if (this.snake.some(segment => segment.x === head.x && segment.y === head.y)) {
+                    this.gameOver();
+                    return;
+                }
+
+                this.snake.unshift(head);
+
+                // Check food collision
+                if (head.x === this.food.x && head.y === this.food.y) {
+                    this.score += 10;
+                    this.updateScore();
+                    this.spawnFood();
+                } else {
+                    this.snake.pop();
+                }
+
+                this.draw();
+            },
+
+            draw() {
+                this.ctx.fillStyle = '#0b0e14';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+                // Draw snake
+                this.snake.forEach((segment, index) => {
+                    this.ctx.fillStyle = index === 0 ? '#10b981' : '#6366f1';
+                    this.ctx.fillRect(segment.x * this.gridSize, segment.y * this.gridSize, 
+                                     this.gridSize - 2, this.gridSize - 2);
+                });
+
+                // Draw food
+                this.ctx.fillStyle = '#ef4444';
+                this.ctx.fillRect(this.food.x * this.gridSize, this.food.y * this.gridSize,
+                                 this.gridSize - 2, this.gridSize - 2);
+            },
+
+            spawnFood() {
+                this.food = {
+                    x: Math.floor(Math.random() * this.tileCount),
+                    y: Math.floor(Math.random() * this.tileCount)
+                };
+            },
+
+            changeDirection(dir) {
+                if (!this.isRunning) return;
+                const directions = {
+                    'UP': {dx: 0, dy: -1, opposite: 'DOWN'},
+                    'DOWN': {dx: 0, dy: 1, opposite: 'UP'},
+                    'LEFT': {dx: -1, dy: 0, opposite: 'RIGHT'},
+                    'RIGHT': {dx: 1, dy: 0, opposite: 'LEFT'}
+                };
+                const newDir = directions[dir];
+                const currentDir = Object.keys(directions).find(key => 
+                    directions[key].dx === this.dx && directions[key].dy === this.dy
+                );
+                if (newDir && directions[currentDir].opposite !== dir) {
+                    this.dx = newDir.dx;
+                    this.dy = newDir.dy;
+                }
+            },
+
+            updateScore() {
+                document.getElementById('snakeScore').textContent = this.score;
+                if (this.score > this.highScore) {
+                    this.highScore = this.score;
+                    localStorage.setItem('snakeHigh', this.highScore);
+                    document.getElementById('snakeHigh').textContent = this.highScore;
+                }
+            },
+
+            gameOver() {
+                this.isRunning = false;
+                clearInterval(this.gameLoop);
+                document.getElementById('finalScore').textContent = this.score;
+                document.getElementById('snakeGameOver').classList.add('show');
+            }
+        };
+
+        // Keyboard controls for snake
+        document.addEventListener('keydown', (e) => {
+            if (document.getElementById('snakeGame').classList.contains('active')) {
+                const keyMap = {
+                    'ArrowUp': 'UP',
+                    'ArrowDown': 'DOWN',
+                    'ArrowLeft': 'LEFT',
+                    'ArrowRight': 'RIGHT',
+                    'w': 'UP',
+                    's': 'DOWN',
+                    'a': 'LEFT',
+                    'd': 'RIGHT'
+                };
+                if (keyMap[e.key]) {
+                    e.preventDefault();
+                    snakeGame.changeDirection(keyMap[e.key]);
+                }
+            }
+        });
+
+        // ==================== MEMORY GAME ====================
+        const memoryGame = {
+            cards: ['🐍', '💾', '🗄️', '⚙️', '🔧', '📊', '🎯', '🔥'],
+            gameCards: [],
+            flippedCards: [],
+            matchedPairs: 0,
+            moves: 0,
+
+            init() {
+                this.reset();
+            },
+
+            reset() {
+                this.gameCards = [...this.cards, ...this.cards].sort(() => Math.random() - 0.5);
+                this.flippedCards = [];
+                this.matchedPairs = 0;
+                this.moves = 0;
+                this.updateStats();
+                this.renderGrid();
+            },
+
+            renderGrid() {
+                const grid = document.getElementById('memoryGrid');
+                grid.innerHTML = '';
+                this.gameCards.forEach((card, index) => {
+                    const cardEl = document.createElement('div');
+                    cardEl.className = 'memory-card';
+                    cardEl.dataset.index = index;
+                    cardEl.textContent = '?';
+                    cardEl.onclick = () => this.flipCard(index);
+                    grid.appendChild(cardEl);
+                });
+            },
+
+            flipCard(index) {
+                if (this.flippedCards.length === 2) return;
+                const cardEl = document.querySelectorAll('.memory-card')[index];
+                if (cardEl.classList.contains('flipped') || cardEl.classList.contains('matched')) return;
+
+                cardEl.classList.add('flipped');
+                cardEl.textContent = this.gameCards[index];
+                this.flippedCards.push({index, value: this.gameCards[index], element: cardEl});
+
+                if (this.flippedCards.length === 2) {
+                    this.moves++;
+                    this.updateStats();
+                    setTimeout(() => this.checkMatch(), 500);
+                }
+            },
+
+            checkMatch() {
+                const [card1, card2] = this.flippedCards;
+                if (card1.value === card2.value) {
+                    card1.element.classList.add('matched');
+                    card2.element.classList.add('matched');
+                    this.matchedPairs++;
+                    this.updateStats();
+                    if (this.matchedPairs === 8) {
+                        setTimeout(() => alert(`🎉 You won in ${this.moves} moves!`), 300);
+                    }
+                } else {
+                    card1.element.classList.remove('flipped');
+                    card2.element.classList.remove('flipped');
+                    card1.element.textContent = '?';
+                    card2.element.textContent = '?';
+                }
+                this.flippedCards = [];
+            },
+
+            updateStats() {
+                document.getElementById('memoryMoves').textContent = this.moves;
+                document.getElementById('memoryMatches').textContent = this.matchedPairs;
+            }
+        };
+
+        // ==================== QUIZ GAME ====================
+        const quizGame = {
+            questions: [
+                {q: "What does OS stand for?", a: ["Operating System", "Open Source", "Output Stream", "Object Storage"], c: 0},
+                {q: "Which SQL command deletes data?", a: ["REMOVE", "DELETE", "DROP", "ERASE"], c: 1},
+                {q: "What is a deadlock?", a: ["System crash", "Process waiting loop", "Memory leak", "Disk error"], c: 1},
+                {q: "What is normalization?", a: ["Data backup", "Database design", "Query optimization", "Index creation"], c: 1},
+                {q: "What is a mutex?", a: ["Memory unit", "Mutual exclusion lock", "Multiple execution", "Module utility"], c: 1},
+                {q: "ACID stands for?", a: ["Access Control ID", "Atomicity Consistency Isolation Durability", "Auto Commit Index Database", "Active Cache Indexed Data"], c: 1},
+                {q: "What is virtual memory?", a: ["RAM simulation", "Disk as RAM", "Cache memory", "Network storage"], c: 1},
+                {q: "Primary key must be?", a: ["Numeric", "Unique", "Indexed", "Foreign"], c: 1},
+                {q: "What is a semaphore?", a: ["Signal variable", "Memory address", "Thread pool", "Cache line"], c: 0},
+                {q: "What is SQL injection?", a: ["Query syntax", "Security vulnerability", "Data type", "Index method"], c: 1}
+            ],
+            currentQuestion: 0,
+            score: 0,
+
+            init() {
+                this.reset();
+            },
+
+            reset() {
+                this.currentQuestion = 0;
+                this.score = 0;
+                this.questions.sort(() => Math.random() - 0.5);
+                document.getElementById('quizGameOver').classList.remove('show');
+                this.showQuestion();
+            },
+
+            showQuestion() {
+                if (this.currentQuestion >= this.questions.length) {
+                    this.endQuiz();
+                    return;
+                }
+
+                const q = this.questions[this.currentQuestion];
+                document.getElementById('quizQuestion').textContent = q.q;
+                document.getElementById('quizCurrent').textContent = this.currentQuestion + 1;
+                document.getElementById('quizScore').textContent = this.score;
+
+                const optionsDiv = document.getElementById('quizOptions');
+                optionsDiv.innerHTML = '';
+                q.a.forEach((answer, index) => {
+                    const option = document.createElement('div');
+                    option.className = 'quiz-option';
+                    option.textContent = answer;
+                    option.onclick = () => this.checkAnswer(index);
+                    optionsDiv.appendChild(option);
+                });
+            },
+
+            checkAnswer(selected) {
+                const q = this.questions[this.currentQuestion];
+                const options = document.querySelectorAll('.quiz-option');
+                
+                options[selected].classList.add(selected === q.c ? 'correct' : 'wrong');
+                options[q.c].classList.add('correct');
+                
+                if (selected === q.c) this.score++;
+
+                options.forEach(opt => opt.onclick = null);
+                
+                setTimeout(() => {
+                    this.currentQuestion++;
+                    this.showQuestion();
+                }, 1000);
+            },
+
+            endQuiz() {
+                document.getElementById('quizFinalScore').textContent = this.score;
+                document.getElementById('quizGameOver').classList.add('show');
+            }
+        };
+
+        // ==================== TYPING GAME ====================
+        const typingGame = {
+            texts: [
+                "function calculateSum(a, b) { return a + b; }",
+                "const arr = [1, 2, 3]; arr.map(x => x * 2);",
+                "SELECT * FROM users WHERE age > 18;",
+                "if (condition) { console.log('true'); }",
+                "class Person { constructor(name) { this.name = name; } }",
+                "for (let i = 0; i < 10; i++) { console.log(i); }",
+                "const promise = new Promise((resolve, reject) => {});",
+                "UPDATE products SET price = price * 1.1 WHERE category = 'books';",
+            ],
+            currentText: '',
+            startTime: null,
+            totalTime: 60,
+            timer: null,
+            correctChars: 0,
+            totalChars: 0,
+
+            init() {
+                this.reset();
+                document.getElementById('typingInput').addEventListener('input', (e) => this.handleInput(e));
+            },
+
+            reset() {
+                clearInterval(this.timer);
+                document.getElementById('typingGameOver').classList.remove('show');
+                this.currentText = this.texts[Math.floor(Math.random() * this.texts.length)];
+                document.getElementById('typingText').textContent = this.currentText;
+                document.getElementById('typingInput').value = '';
+                document.getElementById('typingInput').disabled = false;
+                document.getElementById('typingTime').textContent = this.totalTime;
+                this.startTime = null;
+                this.correctChars = 0;
+                this.totalChars = 0;
+                this.updateStats();
+            },
+
+            handleInput(e) {
+                if (!this.startTime) {
+                    this.startTime = Date.now();
+                    this.startTimer();
+                }
+
+                const typed = e.target.value;
+                this.totalChars = typed.length;
+                this.correctChars = 0;
+
+                let highlighted = '';
+                for (let i = 0; i < this.currentText.length; i++) {
+                    if (i < typed.length) {
+                        if (typed[i] === this.currentText[i]) {
+                            highlighted += `<span style="color: #10b981;">${this.currentText[i]}</span>`;
+                            this.correctChars++;
+                        } else {
+                            highlighted += `<span style="color: #ef4444;">${this.currentText[i]}</span>`;
+                        }
+                    } else {
+                        highlighted += this.currentText[i];
+                    }
+                }
+                document.getElementById('typingText').innerHTML = highlighted;
+                this.updateStats();
+
+                if (typed === this.currentText) {
+                    this.endGame();
+                }
+            },
+
+            startTimer() {
+                let timeLeft = this.totalTime;
+                this.timer = setInterval(() => {
+                    timeLeft--;
+                    document.getElementById('typingTime').textContent = timeLeft;
+                    if (timeLeft <= 0) {
+                        this.endGame();
+                    }
+                }, 1000);
+            },
+
+            updateStats() {
+                const elapsed = this.startTime ? (Date.now() - this.startTime) / 1000 / 60 : 0;
+                const wpm = elapsed > 0 ? Math.round((this.correctChars / 5) / elapsed) : 0;
+                const accuracy = this.totalChars > 0 ? Math.round((this.correctChars / this.totalChars) * 100) : 100;
+                
+                document.getElementById('typingWPM').textContent = wpm;
+                document.getElementById('typingAccuracy').textContent = accuracy;
+            },
+
+            endGame() {
+                clearInterval(this.timer);
+                document.getElementById('typingInput').disabled = true;
+                const elapsed = (Date.now() - this.startTime) / 1000 / 60;
+                const wpm = Math.round((this.correctChars / 5) / elapsed);
+                const accuracy = this.totalChars > 0 ? Math.round((this.correctChars / this.totalChars) * 100) : 100;
+                
+                document.getElementById('finalWPM').textContent = wpm;
+                document.getElementById('finalAccuracy').textContent = accuracy;
+                document.getElementById('finalChars').textContent = this.correctChars;
+                document.getElementById('typingGameOver').classList.add('show');
+            }
+        };
+
+        // ==================== GAME MANAGEMENT ====================
+        function startGame(gameType) {
+            // Hide selection
+            document.getElementById('gameSelection').style.display = 'none';
+            
+            // Hide all games
+            document.querySelectorAll('.game-container').forEach(container => {
+                container.classList.remove('active');
+            });
+
+            // Show selected game
+            switch(gameType) {
+                case 'snake':
+                    document.getElementById('snakeGame').classList.add('active');
+                    snakeGame.init();
+                    break;
+                case 'memory':
+                    document.getElementById('memoryGame').classList.add('active');
+                    memoryGame.init();
+                    break;
+                case 'quiz':
+                    document.getElementById('quizGame').classList.add('active');
+                    quizGame.init();
+                    break;
+                case 'typing':
+                    document.getElementById('typingGame').classList.add('active');
+                    typingGame.init();
+                    break;
+            }
+        }
+
+        function backToMenu() {
+            // Stop any running games
+            if (snakeGame.gameLoop) {
+                clearInterval(snakeGame.gameLoop);
+                snakeGame.isRunning = false;
+            }
+            if (typingGame.timer) {
+                clearInterval(typingGame.timer);
+            }
+
+            // Hide all games
+            document.querySelectorAll('.game-container').forEach(container => {
+                container.classList.remove('active');
+            });
+
+            // Show selection
+            document.getElementById('gameSelection').style.display = 'grid';
+        }
+
+        // Initialize on load
+        window.addEventListener('load', () => {
+            console.log('🎮 EduCore AI Games Loaded!');
+        });
+    </script>
+</body>
+</html>

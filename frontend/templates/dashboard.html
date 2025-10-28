@@ -8,7 +8,7 @@
 
   <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
   <style>
-    /* Additional styles for multi-subject dashboard */
+    /* Enhanced dashboard styles */
     .subject-selector {
       background: var(--card);
       border: 1px solid var(--ring);
@@ -23,6 +23,7 @@
       justify-content: center;
       gap: 16px;
       margin-bottom: 24px;
+      flex-wrap: wrap;
     }
     
     .subject-tab {
@@ -79,10 +80,160 @@
       margin: 0 0 8px;
       color: var(--accent);
     }
-    
+
+    /* Chatbot floating button */
+    .chatbot-float {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      z-index: 1000;
+    }
+
+    .chatbot-button {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      transition: all 0.3s ease;
+      animation: pulse 2s infinite;
+    }
+
+    .chatbot-button:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 30px rgba(99, 102, 241, 0.6);
+    }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4); }
+      50% { box-shadow: 0 4px 30px rgba(99, 102, 241, 0.7); }
+    }
+
+    /* Content cards */
+    .content-grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+
+    .action-card {
+      background: var(--card);
+      border: 1px solid var(--ring);
+      border-radius: 16px;
+      padding: 20px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .action-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+      border-color: var(--accent);
+    }
+
+    .action-card-icon {
+      font-size: 36px;
+      margin-bottom: 12px;
+    }
+
+    .action-card h3 {
+      margin: 0 0 8px;
+      font-size: 18px;
+    }
+
+    .action-card p {
+      color: var(--muted);
+      font-size: 14px;
+      margin: 0;
+    }
+
+    /* Resource list */
+    .resource-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+    }
+
+    .resource-card {
+      background: var(--card);
+      border: 1px solid var(--ring);
+      border-radius: 12px;
+      padding: 16px;
+      transition: all 0.3s ease;
+    }
+
+    .resource-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--accent);
+    }
+
+    .resource-icon {
+      font-size: 32px;
+      margin-bottom: 8px;
+    }
+
+    .resource-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--ring);
+    }
+
+    /* Quiz/Assessment cards */
+    .quiz-card {
+      background: linear-gradient(135deg, rgba(99,102,241,0.1), rgba(139,92,246,0.1));
+      border: 1px solid var(--ring);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+
+    .quiz-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .quiz-stats {
+      display: flex;
+      gap: 16px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .quiz-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(10px); }
       to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .chatbot-float {
+        bottom: 20px;
+        right: 20px;
+      }
+      
+      .chatbot-button {
+        width: 50px;
+        height: 50px;
+        font-size: 24px;
+      }
     }
   </style>
 </head>
@@ -126,6 +277,27 @@
 
   <!-- Main -->
   <main class="main-container">
+    <!-- Quick Actions -->
+    <section class="content-grid-3">
+      <div class="action-card" onclick="window.location.href='{% url 'learning:ai_chatbot' %}'">
+        <div class="action-card-icon">🤖</div>
+        <h3>AI Tutor</h3>
+        <p>Get instant help and personalized explanations</p>
+      </div>
+      
+      <div class="action-card" onclick="window.location.href='/learning/games/'">
+        <div class="action-card-icon">🎮</div>
+        <h3>Learning Games</h3>
+        <p>Make learning fun with interactive games</p>
+      </div>
+      
+      <div class="action-card" onclick="window.location.href='{% url 'learning:ai_dashboard' %}'">
+        <div class="action-card-icon">📊</div>
+        <h3>My Analytics</h3>
+        <p>Track your progress and insights</p>
+      </div>
+    </section>
+
     <!-- Subject Selector -->
     <section class="subject-selector">
       <h2 style="margin-bottom: 16px;">Choose Your Subject</h2>
@@ -143,7 +315,7 @@
       <div class="subject-overview">
         <div class="overview-card">
           <h4>Overall Progress</h4>
-          <p style="font-size: 24px; font-weight: 700; margin: 0;">{{ progress.overall_progress|default:0 }}%</p>
+          <p style="font-size: 24px; font-weight: 700; margin: 0;">{{ overall_progress|default:0 }}%</p>
         </div>
         <div class="overview-card">
           <h4>Subjects Active</h4>
@@ -151,7 +323,7 @@
         </div>
         <div class="overview-card">
           <h4>Study Streak</h4>
-          <p style="font-size: 24px; font-weight: 700; margin: 0;">{{ progress.study_streak|default:0 }} days</p>
+          <p style="font-size: 24px; font-weight: 700; margin: 0;">{{ study_streak|default:0 }} days</p>
         </div>
         <div class="overview-card">
           <h4>AI Recommendations</h4>
@@ -162,7 +334,6 @@
 
     <!-- Operating Systems 2 Content -->
     <div class="subject-content active" id="os2-content">
-      <!-- Course header -->
       <section class="course-header">
         <div class="course-info">
           <h2>💾 Operating Systems 2</h2>
@@ -170,100 +341,85 @@
         </div>
 
         <div class="progress-summary">
-          <div class="progress-value">{{ progress.os2_progress|default:78 }}%</div>
+          <div class="progress-value">{{ os2_progress|default:78 }}%</div>
           <p class="text-dim">Course Progress</p>
           <div class="progress-bar">
-            <div class="progress-fill" style="width: {{ progress.os2_progress|default:78 }}%"></div>
+            <div class="progress-fill" style="width: {{ os2_progress|default:78 }}%"></div>
           </div>
         </div>
       </section>
 
-      <!-- OS2 Stats -->
-      <section class="stats-grid">
-        <article class="stat-card">
-          <div class="stat-icon">📚</div>
-          <div class="stat-content">
-            <p class="stat-number">{{ progress.os2_chapters|default:12 }}</p>
-            <p class="stat-label">Chapters Completed</p>
+      <!-- Quizzes & Assessments -->
+      <section class="content-card">
+        <h3>📝 Quizzes & Assessments</h3>
+        {% for quiz in os2_quizzes %}
+        <div class="quiz-card">
+          <div class="quiz-header">
+            <h4>{{ quiz.title }}</h4>
+            <span class="status-badge {% if quiz.user_attempted %}completed{% else %}not-started{% endif %}">
+              {% if quiz.user_attempted %}Completed{% else %}Available{% endif %}
+            </span>
           </div>
-        </article>
-        <article class="stat-card">
-          <div class="stat-icon">🎥</div>
-          <div class="stat-content">
-            <p class="stat-number">{{ progress.os2_videos|default:8 }}</p>
-            <p class="stat-label">Videos Watched</p>
+          <p style="color: var(--muted); margin: 8px 0;">{{ quiz.description }}</p>
+          <div class="quiz-stats">
+            <span>⏱️ {{ quiz.time_limit }} min</span>
+            <span>📊 Pass: {{ quiz.pass_score }}%</span>
+            <span>❓ {{ quiz.question_count }} questions</span>
           </div>
-        </article>
-        <article class="stat-card">
-          <div class="stat-icon">🧩</div>
-          <div class="stat-content">
-            <p class="stat-number">{{ progress.os2_quizzes|default:5 }}</p>
-            <p class="stat-label">Quizzes Passed</p>
+          <div class="quiz-actions">
+            <a class="btn-primary" href="/learning/quiz/{{ quiz.id }}/">
+              {% if quiz.user_attempted %}Retake Quiz{% else %}Start Quiz{% endif %}
+            </a>
+            {% if quiz.user_best_score %}
+            <span style="color: var(--muted); padding: 8px;">Best Score: {{ quiz.user_best_score }}%</span>
+            {% endif %}
           </div>
-        </article>
-        <article class="stat-card">
-          <div class="stat-icon">🏆</div>
-          <div class="stat-content">
-            <p class="stat-number">{{ progress.os2_score|default:85 }}%</p>
-            <p class="stat-label">Average Score</p>
+        </div>
+        {% empty %}
+        <p style="color: var(--muted); padding: 20px; text-align: center;">No quizzes available yet</p>
+        {% endfor %}
+      </section>
+
+      <!-- Learning Materials -->
+      <section class="content-card">
+        <h3>📚 Learning Materials</h3>
+        <div class="resource-grid">
+          {% for resource in os2_resources %}
+          <div class="resource-card" onclick="window.location.href='/learning/resource/{{ resource.id }}/'">
+            <div class="resource-icon">
+              {% if resource.kind == 'video' %}🎥
+              {% elif resource.kind == 'pdf' %}📄
+              {% elif resource.kind == 'code' %}💻
+              {% else %}📖{% endif %}
+            </div>
+            <h4 style="margin: 0 0 8px;">{{ resource.title }}</h4>
+            <p style="color: var(--muted); font-size: 13px; margin: 0;">{{ resource.kind|title }}</p>
+            <div class="resource-meta">
+              <span style="font-size: 12px; color: var(--muted);">{{ resource.created_at|date:"M d, Y" }}</span>
+              <a href="/learning/resource/{{ resource.id }}/" class="btn-small">View</a>
+            </div>
           </div>
-        </article>
+          {% empty %}
+          <p style="color: var(--muted); padding: 20px; text-align: center; grid-column: 1/-1;">No materials uploaded yet</p>
+          {% endfor %}
+        </div>
       </section>
 
       <section class="content-grid">
         <!-- Left column -->
         <div class="left-column">
           <div class="content-card">
-            <h3>📖 Continue Learning - Operating Systems</h3>
+            <h3>📖 Continue Learning</h3>
             <div class="current-topic">
               <div class="topic-header" style="display:flex; justify-content:space-between; align-items:center;">
-                <h4>{{ os2_current_topic.title|default:"Chapter 7: Memory Management" }}</h4>
-                <span class="status-badge in-progress">{{ os2_current_topic.status|default:"In Progress" }}</span>
+                <h4>{{ os2_current_lesson.title|default:"Chapter 7: Memory Management" }}</h4>
+                <span class="status-badge in-progress">In Progress</span>
               </div>
-              <p>{{ os2_current_topic.summary|default:"Learn about virtual memory, paging, and segmentation techniques in modern operating systems." }}</p>
+              <p>{{ os2_current_lesson.content|truncatewords:20|default:"Learn about virtual memory, paging, and segmentation techniques." }}</p>
               <div class="topic-actions" style="display:flex; gap:8px; flex-wrap:wrap;">
-                <a class="btn-primary" href="{{ os2_current_topic.read_url|default:'/learning/lessons/1/' }}">Continue Reading</a>
-                <a class="btn-secondary" href="{{ os2_current_topic.video_url|default:'#' }}">Watch Video</a>
+                <a class="btn-primary" href="{% url 'learning:lesson_detail' os2_current_lesson.id %}">Continue Reading</a>
+                <a class="btn-secondary" href="/learning/games/">Practice with Games</a>
               </div>
-            </div>
-          </div>
-
-          <div class="content-card">
-            <h3>📚 OS Learning Materials</h3>
-            <div class="material-list">
-              {% for m in os2_materials %}
-                <div class="material-item">
-                  <div style="display:flex; align-items:center; gap:10px;">
-                    <div class="material-icon">{{ m.icon|default:"📄" }}</div>
-                    <div class="material-content">
-                      <h4 style="margin:0">{{ m.title }}</h4>
-                      <p style="margin:2px 0 0; color:var(--muted)">{{ m.subtitle }}</p>
-                    </div>
-                  </div>
-                  <span class="status-badge {{ m.status_class }}">{{ m.status_label }}</span>
-                </div>
-              {% empty %}
-                <div class="material-item">
-                  <div style="display:flex; align-items:center; gap:10px;">
-                    <div class="material-icon">📄</div>
-                    <div class="material-content">
-                      <h4 style="margin:0">Process Management Notes</h4>
-                      <p style="margin:2px 0 0; color:var(--muted)">Comprehensive guide to process scheduling</p>
-                    </div>
-                  </div>
-                  <span class="status-badge completed">Completed</span>
-                </div>
-                <div class="material-item">
-                  <div style="display:flex; align-items:center; gap:10px;">
-                    <div class="material-icon">🎥</div>
-                    <div class="material-content">
-                      <h4 style="margin:0">Memory Management Video</h4>
-                      <p style="margin:2px 0 0; color:var(--muted)">45 min • Virtual memory concepts</p>
-                    </div>
-                  </div>
-                  <span class="status-badge in-progress">In Progress</span>
-                </div>
-              {% endfor %}
             </div>
           </div>
         </div>
@@ -271,24 +427,34 @@
         <!-- Right column -->
         <aside class="right-column">
           <div class="content-card">
-            <h3>🤖 OS Recommendations</h3>
+            <h3>🤖 AI Recommendations</h3>
             <div class="recommendation-list">
+              {% for rec in recommendations %}
               <div class="recommendation focus" style="border:1px dashed #1f2937; border-radius:12px; padding:12px; margin:10px 0">
-                <h4>📈 Focus Area</h4>
-                <p class="text-dim">Review deadlock prevention algorithms - detected difficulty in recent quiz.</p>
-                <a class="btn-small" href="#">Study Deadlocks</a>
+                <h4>{{ rec.title }}</h4>
+                <p class="text-dim">{{ rec.description }}</p>
+                <a class="btn-small" href="#">Take Action</a>
               </div>
-              <div class="recommendation next-steps" style="border:1px dashed #1f2937; border-radius:12px; padding:12px; margin:10px 0">
-                <h4>🎯 Next Steps</h4>
-                <p class="text-dim">Great progress on memory! Ready for file system concepts.</p>
-                <a class="btn-small" href="#">Continue</a>
-              </div>
+              {% empty %}
+              <p style="color: var(--muted); text-align: center;">You're doing great! Keep up the good work.</p>
+              {% endfor %}
             </div>
           </div>
 
           <div class="content-card">
-            <h3>📈 OS Progress Tracking</h3>
+            <h3>📈 Progress Tracking</h3>
             <div class="progress-list">
+              {% for topic in os2_topics %}
+              <div class="progress-item">
+                <div class="progress-header">
+                  <span>{{ topic.name }}</span>
+                  <span>{{ topic.progress }}%</span>
+                </div>
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: {{ topic.progress }}%"></div>
+                </div>
+              </div>
+              {% empty %}
               <div class="progress-item">
                 <div class="progress-header">
                   <span>Process Management</span>
@@ -298,24 +464,7 @@
                   <div class="progress-fill" style="width: 95%"></div>
                 </div>
               </div>
-              <div class="progress-item">
-                <div class="progress-header">
-                  <span>Memory Management</span>
-                  <span>72%</span>
-                </div>
-                <div class="progress-bar">
-                  <div class="progress-fill" style="width: 72%"></div>
-                </div>
-              </div>
-              <div class="progress-item">
-                <div class="progress-header">
-                  <span>File Systems</span>
-                  <span>45%</span>
-                </div>
-                <div class="progress-bar">
-                  <div class="progress-fill" style="width: 45%"></div>
-                </div>
-              </div>
+              {% endfor %}
             </div>
           </div>
         </aside>
@@ -324,7 +473,6 @@
 
     <!-- Database Systems 3 Content -->
     <div class="subject-content" id="db3-content">
-      <!-- Course header -->
       <section class="course-header">
         <div class="course-info">
           <h2>🗄️ Database Systems 3</h2>
@@ -332,217 +480,112 @@
         </div>
 
         <div class="progress-summary">
-          <div class="progress-value">{{ progress.db3_progress|default:65 }}%</div>
+          <div class="progress-value">{{ db3_progress|default:65 }}%</div>
           <p class="text-dim">Course Progress</p>
           <div class="progress-bar">
-            <div class="progress-fill" style="width: {{ progress.db3_progress|default:65 }}%"></div>
+            <div class="progress-fill" style="width: {{ db3_progress|default:65 }}%"></div>
           </div>
         </div>
       </section>
 
-      <!-- DB3 Stats -->
-      <section class="stats-grid">
-        <article class="stat-card">
-          <div class="stat-icon">📊</div>
-          <div class="stat-content">
-            <p class="stat-number">{{ progress.db3_chapters|default:9 }}</p>
-            <p class="stat-label">Topics Completed</p>
+      <!-- Quizzes & Assessments -->
+      <section class="content-card">
+        <h3>📝 Quizzes & Assessments</h3>
+        {% for quiz in db3_quizzes %}
+        <div class="quiz-card">
+          <div class="quiz-header">
+            <h4>{{ quiz.title }}</h4>
+            <span class="status-badge {% if quiz.user_attempted %}completed{% else %}not-started{% endif %}">
+              {% if quiz.user_attempted %}Completed{% else %}Available{% endif %}
+            </span>
           </div>
-        </article>
-        <article class="stat-card">
-          <div class="stat-icon">💾</div>
-          <div class="stat-content">
-            <p class="stat-number">{{ progress.db3_queries|default:15 }}</p>
-            <p class="stat-label">SQL Queries Practiced</p>
+          <p style="color: var(--muted); margin: 8px 0;">{{ quiz.description }}</p>
+          <div class="quiz-stats">
+            <span>⏱️ {{ quiz.time_limit }} min</span>
+            <span>📊 Pass: {{ quiz.pass_score }}%</span>
+            <span>❓ {{ quiz.question_count }} questions</span>
           </div>
-        </article>
-        <article class="stat-card">
-          <div class="stat-icon">🧩</div>
-          <div class="stat-content">
-            <p class="stat-number">{{ progress.db3_exercises|default:7 }}</p>
-            <p class="stat-label">Exercises Completed</p>
+          <div class="quiz-actions">
+            <a class="btn-primary" href="/learning/quiz/{{ quiz.id }}/">
+              {% if quiz.user_attempted %}Retake Quiz{% else %}Start Quiz{% endif %}
+            </a>
+            {% if quiz.user_best_score %}
+            <span style="color: var(--muted); padding: 8px;">Best Score: {{ quiz.user_best_score }}%</span>
+            {% endif %}
           </div>
-        </article>
-        <article class="stat-card">
-          <div class="stat-icon">🏆</div>
-          <div class="stat-content">
-            <p class="stat-number">{{ progress.db3_score|default:78 }}%</p>
-            <p class="stat-label">Average Score</p>
+        </div>
+        {% empty %}
+        <p style="color: var(--muted); padding: 20px; text-align: center;">No quizzes available yet</p>
+        {% endfor %}
+      </section>
+
+      <!-- Learning Materials -->
+      <section class="content-card">
+        <h3>📚 Learning Materials</h3>
+        <div class="resource-grid">
+          {% for resource in db3_resources %}
+          <div class="resource-card" onclick="window.location.href='/learning/resource/{{ resource.id }}/'">
+            <div class="resource-icon">
+              {% if resource.kind == 'video' %}🎥
+              {% elif resource.kind == 'pdf' %}📄
+              {% elif resource.kind == 'code' %}💻
+              {% else %}📖{% endif %}
+            </div>
+            <h4 style="margin: 0 0 8px;">{{ resource.title }}</h4>
+            <p style="color: var(--muted); font-size: 13px; margin: 0;">{{ resource.kind|title }}</p>
+            <div class="resource-meta">
+              <span style="font-size: 12px; color: var(--muted);">{{ resource.created_at|date:"M d, Y" }}</span>
+              <a href="/learning/resource/{{ resource.id }}/" class="btn-small">View</a>
+            </div>
           </div>
-        </article>
+          {% empty %}
+          <p style="color: var(--muted); padding: 20px; text-align: center; grid-column: 1/-1;">No materials uploaded yet</p>
+          {% endfor %}
+        </div>
       </section>
 
       <section class="content-grid">
-        <!-- Left column -->
         <div class="left-column">
           <div class="content-card">
-            <h3>📖 Continue Learning - Database Systems</h3>
+            <h3>📖 Continue Learning</h3>
             <div class="current-topic">
               <div class="topic-header" style="display:flex; justify-content:space-between; align-items:center;">
-                <h4>{{ db3_current_topic.title|default:"Chapter 5: Query Optimization" }}</h4>
-                <span class="status-badge in-progress">{{ db3_current_topic.status|default:"In Progress" }}</span>
+                <h4>{{ db3_current_lesson.title|default:"Chapter 5: Query Optimization" }}</h4>
+                <span class="status-badge in-progress">In Progress</span>
               </div>
-              <p>{{ db3_current_topic.summary|default:"Learn advanced query optimization techniques, indexing strategies, and performance tuning." }}</p>
+              <p>{{ db3_current_lesson.content|truncatewords:20|default:"Learn advanced query optimization techniques and indexing strategies." }}</p>
               <div class="topic-actions" style="display:flex; gap:8px; flex-wrap:wrap;">
-                <a class="btn-primary" href="{{ db3_current_topic.read_url|default:'/learning/lessons/6/' }}">Continue Reading</a>
-                <a class="btn-secondary" href="{{ db3_current_topic.practice_url|default:'#' }}">Practice SQL</a>
+                <a class="btn-primary" href="{% url 'learning:lesson_detail' db3_current_lesson.id %}">Continue Reading</a>
+                <a class="btn-secondary" href="/learning/games/">Practice SQL</a>
               </div>
-            </div>
-          </div>
-
-          <div class="content-card">
-            <h3>📚 Database Learning Materials</h3>
-            <div class="material-list">
-              {% for m in db3_materials %}
-                <div class="material-item">
-                  <div style="display:flex; align-items:center; gap:10px;">
-                    <div class="material-icon">{{ m.icon|default:"📄" }}</div>
-                    <div class="material-content">
-                      <h4 style="margin:0">{{ m.title }}</h4>
-                      <p style="margin:2px 0 0; color:var(--muted)">{{ m.subtitle }}</p>
-                    </div>
-                  </div>
-                  <span class="status-badge {{ m.status_class }}">{{ m.status_label }}</span>
-                </div>
-              {% empty %}
-                <div class="material-item">
-                  <div style="display:flex; align-items:center; gap:10px;">
-                    <div class="material-icon">📊</div>
-                    <div class="material-content">
-                      <h4 style="margin:0">Normalization Theory</h4>
-                      <p style="margin:2px 0 0; color:var(--muted)">1NF, 2NF, 3NF, and BCNF explained</p>
-                    </div>
-                  </div>
-                  <span class="status-badge completed">Completed</span>
-                </div>
-                <div class="material-item">
-                  <div style="display:flex; align-items:center; gap:10px;">
-                    <div class="material-icon">💾</div>
-                    <div class="material-content">
-                      <h4 style="margin:0">SQL Query Optimization</h4>
-                      <p style="margin:2px 0 0; color:var(--muted)">Advanced indexing and performance</p>
-                    </div>
-                  </div>
-                  <span class="status-badge in-progress">In Progress</span>
-                </div>
-                <div class="material-item">
-                  <div style="display:flex; align-items:center; gap:10px;">
-                    <div class="material-icon">🔄</div>
-                    <div class="material-content">
-                      <h4 style="margin:0">Transaction Management</h4>
-                      <p style="margin:2px 0 0; color:var(--muted)">ACID properties and concurrency</p>
-                    </div>
-                  </div>
-                  <span class="status-badge not-started">Not Started</span>
-                </div>
-              {% endfor %}
             </div>
           </div>
         </div>
 
-        <!-- Right column -->
         <aside class="right-column">
-          <div class="content-card">
-            <h3>🤖 Database Recommendations</h3>
-            <div class="recommendation-list">
-              <div class="recommendation focus" style="border:1px dashed #1f2937; border-radius:12px; padding:12px; margin:10px 0">
-                <h4>📈 Focus Area</h4>
-                <p class="text-dim">Practice JOIN operations - detected complexity in recent exercises.</p>
-                <a class="btn-small" href="#">SQL Practice</a>
-              </div>
-              <div class="recommendation next-steps" style="border:1px dashed #1f2937; border-radius:12px; padding:12px; margin:10px 0">
-                <h4>🎯 Next Steps</h4>
-                <p class="text-dim">Excellent normalization work! Ready for transaction concepts.</p>
-                <a class="btn-small" href="#">Continue</a>
-              </div>
-            </div>
-          </div>
-
-          <div class="content-card">
-            <h3>📈 Database Progress Tracking</h3>
-            <div class="progress-list">
-              <div class="progress-item">
-                <div class="progress-header">
-                  <span>SQL Fundamentals</span>
-                  <span>90%</span>
-                </div>
-                <div class="progress-bar">
-                  <div class="progress-fill" style="width: 90%"></div>
-                </div>
-              </div>
-              <div class="progress-item">
-                <div class="progress-header">
-                  <span>Database Design</span>
-                  <span>75%</span>
-                </div>
-                <div class="progress-bar">
-                  <div class="progress-fill" style="width: 75%"></div>
-                </div>
-              </div>
-              <div class="progress-item">
-                <div class="progress-header">
-                  <span>Query Optimization</span>
-                  <span>60%</span>
-                </div>
-                <div class="progress-bar">
-                  <div class="progress-fill" style="width: 60%"></div>
-                </div>
-              </div>
-              <div class="progress-item">
-                <div class="progress-header">
-                  <span>Transactions</span>
-                  <span>25%</span>
-                </div>
-                <div class="progress-bar">
-                  <div class="progress-fill" style="width: 25%"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-
           <div class="content-card">
             <h3>⚡ Quick Actions</h3>
             <div class="action-buttons" style="display:grid; gap:8px">
-              <a class="btn-primary full-width" href="/learning/quiz_list/">Practice Quiz</a>
-              <a class="btn-secondary full-width" href="/learning/ai/study-plan/">Study Plan</a>
-              <a class="btn-secondary full-width" href="/learning/ask_ai/">Ask AI Tutor</a>
+              <a class="btn-primary full-width" href="/learning/courses/">Browse Courses</a>
+              <a class="btn-secondary full-width" href="{% url 'learning:ai_dashboard' %}">View Analytics</a>
+              <a class="btn-secondary full-width" href="{% url 'learning:ai_chatbot' %}">Ask AI Tutor</a>
             </div>
           </div>
         </aside>
       </section>
     </div>
-
-    <!-- Cross-Subject Analytics -->
-    <section class="content-card" style="margin-top: 2rem;">
-      <h3>📊 Cross-Subject Analytics</h3>
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px;">
-        <div class="overview-card">
-          <h4>Learning Velocity</h4>
-          <p style="font-size: 20px; font-weight: 700; margin: 4px 0;">1.2x Average</p>
-          <small style="color: var(--muted);">Across both subjects</small>
-        </div>
-        <div class="overview-card">
-          <h4>Strongest Area</h4>
-          <p style="font-size: 16px; font-weight: 700; margin: 4px 0;">SQL Queries</p>
-          <small style="color: var(--muted);">95% accuracy rate</small>
-        </div>
-        <div class="overview-card">
-          <h4>Focus Needed</h4>
-          <p style="font-size: 16px; font-weight: 700; margin: 4px 0;">OS Synchronization</p>
-          <small style="color: var(--muted);">Deadlock concepts</small>
-        </div>
-        <div class="overview-card">
-          <h4>Study Pattern</h4>
-          <p style="font-size: 16px; font-weight: 700; margin: 4px 0;">Morning Learner</p>
-          <small style="color: var(--muted);">Peak performance 9-11 AM</small>
-        </div>
-      </div>
-    </section>
   </main>
 
+  <!-- Floating Chatbot Button -->
+  <div class="chatbot-float">
+    <button class="chatbot-button" onclick="window.location.href='{% url 'learning:ai_chatbot' %}'" title="AI Tutor">
+      🤖
+    </button>
+  </div>
+
   <script>
-    // Subject tab switching functionality
     document.addEventListener('DOMContentLoaded', function() {
+      // Subject tab switching
       const tabs = document.querySelectorAll('.subject-tab');
       const contents = document.querySelectorAll('.subject-content');
       
@@ -550,38 +593,27 @@
         tab.addEventListener('click', function() {
           const subject = this.dataset.subject;
           
-          // Update active tab
           tabs.forEach(t => t.classList.remove('active'));
           this.classList.add('active');
           
-          // Update active content
           contents.forEach(c => c.classList.remove('active'));
           document.getElementById(subject + '-content').classList.add('active');
-          
-          // Track subject selection for analytics
-          if (window.aiDashboard) {
-            window.aiDashboard.trackSubjectSwitch(subject);
-          }
         });
       });
       
-      // User menu dropdown functionality
+      // User menu dropdown
       const menu = document.getElementById('userMenu');
       if (menu) {
         const avatar = document.getElementById('avatar');
         const dropdown = document.getElementById('dropdown');
 
-        const toggle = (e) => {
-          e?.stopPropagation();
+        avatar.addEventListener('click', (e) => {
+          e.stopPropagation();
           dropdown.style.display = (dropdown.style.display === 'block') ? 'none' : 'block';
-        };
-
-        avatar.addEventListener('click', toggle);
+        });
+        
         document.addEventListener('click', (e) => {
           if (!menu.contains(e.target)) dropdown.style.display = 'none';
-        });
-        window.addEventListener('keydown', (e) => {
-          if (e.key === 'Escape') dropdown.style.display = 'none';
         });
       }
     });

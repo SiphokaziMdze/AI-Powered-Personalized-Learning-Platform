@@ -1,0 +1,164 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <style>
+        .games-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+        
+        .games-header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+        
+        .games-header h1 {
+            font-size: 36px;
+            margin-bottom: 16px;
+        }
+        
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            margin-top: 32px;
+        }
+        
+        .game-card {
+            background: var(--card);
+            border: 2px solid var(--ring);
+            border-radius: 20px;
+            padding: 32px;
+            text-align: center;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .game-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #6366f1, #8b5cf6);
+            transform: scaleX(0);
+            transition: transform 0.4s ease;
+        }
+        
+        .game-card:hover {
+            transform: translateY(-8px);
+            border-color: var(--accent);
+            box-shadow: 0 12px 40px rgba(99, 102, 241, 0.3);
+        }
+        
+        .game-card:hover::before {
+            transform: scaleX(1);
+        }
+        
+        .game-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            display: inline-block;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        .game-card:hover .game-icon {
+            animation: bounce 0.6s ease;
+        }
+        
+        .game-card h3 {
+            font-size: 24px;
+            margin: 16px 0;
+            color: var(--text);
+        }
+        
+        .game-card p {
+            color: var(--muted);
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+        
+        .game-badge {
+            display: inline-block;
+            background: rgba(99,102,241,0.1);
+            color: var(--accent);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-top: 16px;
+        }
+        
+        .coming-soon {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+        
+        .coming-soon .game-badge {
+            background: rgba(156,163,175,0.2);
+            color: var(--muted);
+        }
+        
+        .back-button {
+            margin-bottom: 32px;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+    </style>
+</head>
+<body>
+    <div class="games-container">
+        <div class="back-button">
+            <a href="{% url 'frontend:dashboard' %}" class="btn-secondary">
+                ← Back to Dashboard
+            </a>
+        </div>
+        
+        <div class="games-header">
+            <h1>🎮 Learning Games</h1>
+            <p style="color: var(--muted); font-size: 18px;">
+                Make learning fun with interactive games and challenges
+            </p>
+        </div>
+        
+        <div class="games-grid">
+            {% for game in games %}
+            <div class="game-card {% if game.coming_soon %}coming-soon{% endif %}" 
+                 onclick="{% if not game.coming_soon %}window.location.href='{{ game.url }}'{% endif %}">
+                <div class="game-icon">{{ game.icon }}</div>
+                <h3>{{ game.title }}</h3>
+                <p>{{ game.description }}</p>
+                <span class="game-badge">
+                    {% if game.coming_soon %}Coming Soon{% else %}Play Now{% endif %}
+                </span>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div style="text-align: center; margin-top: 64px; padding: 32px; background: var(--card); border-radius: 16px;">
+            <h2 style="margin-bottom: 16px;">🏆 Challenge Your Friends!</h2>
+            <p style="color: var(--muted); margin-bottom: 24px;">
+                Compete with other students and climb the leaderboard
+            </p>
+            <a href="{% url 'frontend:dashboard' %}" class="btn-primary">View Leaderboard</a>
+        </div>
+    </div>
+</body>
+</html>

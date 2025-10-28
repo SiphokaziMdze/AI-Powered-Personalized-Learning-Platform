@@ -1,0 +1,170 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <style>
+        .quiz-container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+        
+        .quiz-header {
+            background: var(--card);
+            border: 1px solid var(--ring);
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 32px;
+        }
+        
+        .quiz-info {
+            display: flex;
+            gap: 24px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--ring);
+        }
+        
+        .quiz-info-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .question-card {
+            background: var(--card);
+            border: 1px solid var(--ring);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        
+        .question-number {
+            display: inline-block;
+            background: var(--accent);
+            color: #0b1020;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+        
+        .choices {
+            margin-top: 20px;
+        }
+        
+        .choice-option {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            margin: 12px 0;
+            border: 2px solid var(--ring);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .choice-option:hover {
+            border-color: var(--accent);
+            background: rgba(99,102,241,0.05);
+        }
+        
+        .choice-option input[type="radio"] {
+            margin-right: 12px;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        
+        .submit-section {
+            background: var(--card);
+            border: 1px solid var(--ring);
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="quiz-container">
+        <div class="quiz-header">
+            <h1>{{ quiz.title }}</h1>
+            <p>{{ quiz.description }}</p>
+            
+            <div class="quiz-info">
+                <div class="quiz-info-item">
+                    <span>⏱️</span>
+                    <span>Time Limit: {{ quiz.time_limit }} minutes</span>
+                </div>
+                <div class="quiz-info-item">
+                    <span>📊</span>
+                    <span>Pass Score: {{ quiz.pass_score }}%</span>
+                </div>
+                <div class="quiz-info-item">
+                    <span>❓</span>
+                    <span>Questions: {{ questions|length }}</span>
+                </div>
+            </div>
+        </div>
+        
+        <form method="post" id="quizForm">
+            {% csrf_token %}
+            
+            {% for question in questions %}
+            <div class="question-card">
+                <span class="question-number">Question {{ forloop.counter }}</span>
+                <h3>{{ question.text }}</h3>
+                
+                <div class="choices">
+                    {% for choice in question.choices.all %}
+                    <label class="choice-option">
+                        <input type="radio" name="question_{{ question.id }}" value="{{ choice.id }}" required>
+                        <span>{{ choice.text }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+            
+            <div class="submit-section">
+                <p style="color: var(--muted); margin-bottom: 20px;">
+                    Ready to submit your answers? Make sure you've answered all questions!
+                </p>
+                <button type="submit" class="btn-primary" style="padding: 12px 48px; font-size: 16px;">
+                    Submit Quiz
+                </button>
+                <br><br>
+                <a href="{% url 'frontend:dashboard' %}" class="btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+    
+    <script>
+        document.getElementById('quizForm').addEventListener('submit', function(e) {
+            const questions = document.querySelectorAll('.question-card');
+            let allAnswered = true;
+            
+            questions.forEach(question => {
+                const radios = question.querySelectorAll('input[type="radio"]');
+                const answered = Array.from(radios).some(radio => radio.checked);
+                if (!answered) allAnswered = false;
+            });
+            
+            if (!allAnswered) {
+                e.preventDefault();
+                alert('Please answer all questions before submitting!');
+                return false;
+            }
+            
+            if (!confirm('Are you sure you want to submit your quiz?')) {
+                e.preventDefault();
+                return false;
+            }
+        });
+    </script>
+</body>
+</html>

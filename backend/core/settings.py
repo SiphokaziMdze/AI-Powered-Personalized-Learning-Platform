@@ -89,14 +89,9 @@ MEDIA_ROOT = BASE_DIR.parent / "media"
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Login settings - redirect to home page where modals handle auth
-LOGIN_URL = '/'
-LOGIN_REDIRECT_URL = '/dashboard/'
-LOGOUT_REDIRECT_URL = '/'
-
-LOGIN_URL = "frontend:home"
+LOGIN_URL = "frontend:login"
 LOGIN_REDIRECT_URL = "frontend:dashboard"
-LOGOUT_REDIRECT_URL = "frontend:home"
+LOGOUT_REDIRECT_URL = "/"
 
 # Login settings
 #LOGIN_URL = '/' 

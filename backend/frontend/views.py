@@ -1,6 +1,4 @@
-# ============================================
-# backend/frontend/views.py (COMPLETELY FIXED)
-# ============================================
+#backend/frontend/views.py
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
@@ -8,7 +6,8 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.db.models import Avg, Count
+from django.utils.decorators import method_decorator
+from django.db.models import Avg, Count, Q
 from learning.models import *
 import json
 import re
@@ -31,45 +30,9 @@ def home(request):
 @login_required
 def dashboard(request):
     """Main dashboard view"""
-    user_courses = Course.objects.filter(
-        lessons__userprogress__user=request.user
-    ).distinct()
-    
-    if not user_courses.exists():
-        user_courses = Course.objects.filter(is_published=True)[:3]
-    
-    total_lessons = Lesson.objects.filter(course__in=user_courses).count()
-    completed_lessons = UserProgress.objects.filter(
-        user=request.user,
-        is_completed=True
-    ).count()
-    
-    overall_progress = (completed_lessons / total_lessons * 100) if total_lessons > 0 else 0
-    
-    recent_progress = UserProgress.objects.filter(
-        user=request.user
-    ).select_related('course', 'lesson').order_by('-last_accessed')[:5]
-    
-    recommendations = AIRecommendation.objects.filter(
-        user=request.user,
-        is_active=True
-    ).order_by('-priority', '-created_at')[:3]
-    
-    profile, created = UserProfile.objects.get_or_create(user=request.user)
-    
-    context = {
-        'title': 'Dashboard - EduCore AI',
-        'user_courses': user_courses,
-        'overall_progress': round(overall_progress, 1),
-        'completed_lessons': completed_lessons,
-        'total_lessons': total_lessons,
-        'recent_progress': recent_progress,
-        'recommendations': recommendations,
-        'study_streak': profile.study_streak,
-    }
-    
-    return render(request, 'dashboard.html', context)
-
+    # Import here to avoid circular imports
+    from learning.views import dashboard as learning_dashboard
+    return learning_dashboard(request)
 
 @login_required
 def profile_view(request):
@@ -171,127 +134,132 @@ def settings_view(request):
     
     return render(request, 'settings.html', context)
 
+def login_view(request):
+    """Login page (form-based)"""
+    if request.user.is_authenticated:
+        return redirect('frontend:dashboard')
+
+    if request.method == 'POST':
+        form = AuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            user = form.get_user()
+            login(request, user)
+            next_url = request.GET.get('next') or reverse('frontend:dashboard')
+            return redirect(next_url)
+        else:
+            messages.error(request, "Invalid email/username or password.")
+    else:
+        form = AuthenticationForm(request)
+
+    context = {
+        'title': 'Login - EduCore AI',
+        'form': form,
+    }
+    return render(request, 'login.html', context)
+
+def signup_view(request):
+    """Signup page"""
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+    
+    context = {
+        'title': 'Sign Up - EduCore AI',
+    }
+    return render(request, 'signup.html', context)
 
 def logout_view(request):
     """Logout and redirect"""
     logout(request)
     messages.success(request, 'You have been logged out successfully.')
-    return redirect('frontend:home')
-
-
-# NO MORE login_view or signup_view - all handled via modals and API
-
+    return redirect(':index')
 
 @csrf_exempt
 def api_login(request):
     """API endpoint for login"""
     if request.method == 'POST':
+        data = json.loads(request.body)
+        email = data.get('email')
+        password = data.get('password')
+        
+        if not email or not password:
+            return JsonResponse({
+                'success': False,
+                'message': 'Email and password are required'
+            })
+        
+        # Try to authenticate with email
         try:
-            data = json.loads(request.body.decode('utf-8'))
-            email = data.get('email', '').strip()
-            password = data.get('password', '')
-            
-            if not email or not password:
-                return JsonResponse({
-                    'success': False,
-                    'message': 'Email and password are required'
-                })
-            
-            # Authenticate with email
-            try:
-                user = User.objects.get(email=email)
-                user = authenticate(request, username=user.username, password=password)
-            except User.DoesNotExist:
-                return JsonResponse({
-                    'success': False,
-                    'message': 'Invalid email or password'
-                })
-            
-            if user is not None:
-                login(request, user)
-                return JsonResponse({
-                    'success': True,
-                    'message': 'Login successful',
-                    'redirect': '/dashboard/'
-                })
-            else:
-                return JsonResponse({
-                    'success': False,
-                    'message': 'Invalid email or password'
-                })
-                
-        except json.JSONDecodeError:
+            user = User.objects.get(email=email)
+            user = authenticate(request, username=user.username, password=password)
+        except User.DoesNotExist:
+            user = None
+        
+        if user is not None:
+            login(request, user)
+            return JsonResponse({
+                'success': True,
+                'message': 'Login successful',
+                'redirect': '/dashboard/'
+            })
+        else:
             return JsonResponse({
                 'success': False,
-                'message': 'Invalid request format'
-            }, status=400)
-        except Exception as e:
-            return JsonResponse({
-                'success': False,
-                'message': 'An error occurred during login'
-            }, status=500)
+                'message': 'Invalid email or password'
+            })
     
-    return JsonResponse({
-        'success': False,
-        'message': 'Invalid request method'
-    }, status=405)
-
+    return JsonResponse({'success': False, 'message': 'Invalid request method'})
 
 @csrf_exempt
 def api_signup(request):
     """API endpoint for signup"""
     if request.method == 'POST':
+        data = json.loads(request.body)
+        
+        first_name = data.get('firstName', '').strip()
+        last_name = data.get('lastName', '').strip()
+        email = data.get('email', '').strip()
+        password = data.get('password', '')
+        confirm_password = data.get('confirmPassword', '')
+        
+        # Validation
+        if not all([first_name, last_name, email, password]):
+            return JsonResponse({
+                'success': False,
+                'message': 'All fields are required'
+            })
+        
+        if password != confirm_password:
+            return JsonResponse({
+                'success': False,
+                'message': 'Passwords do not match'
+            })
+        
+        if len(password) < 8:
+            return JsonResponse({
+                'success': False,
+                'message': 'Password must be at least 8 characters long'
+            })
+        
+        # Check if email already exists
+        if User.objects.filter(email=email).exists():
+            return JsonResponse({
+                'success': False,
+                'message': 'An account with this email already exists'
+            })
+        
         try:
-            data = json.loads(request.body.decode('utf-8'))
-            
-            first_name = data.get('firstName', '').strip()
-            last_name = data.get('lastName', '').strip()
-            email = data.get('email', '').strip()
-            password = data.get('password', '')
-            confirm_password = data.get('confirmPassword', '')
-            
-            # Validation
-            if not all([first_name, last_name, email, password, confirm_password]):
-                return JsonResponse({
-                    'success': False,
-                    'message': 'All fields are required'
-                })
-            
-            if password != confirm_password:
-                return JsonResponse({
-                    'success': False,
-                    'message': 'Passwords do not match'
-                })
-            
-            if len(password) < 8:
-                return JsonResponse({
-                    'success': False,
-                    'message': 'Password must be at least 8 characters long'
-                })
-            
-            email_regex = r'^[^\s@]+@[^\s@]+\.[^\s@]+$'
-            if not re.match(email_regex, email):
-                return JsonResponse({
-                    'success': False,
-                    'message': 'Please enter a valid email address'
-                })
-            
-            if User.objects.filter(email=email).exists():
-                return JsonResponse({
-                    'success': False,
-                    'message': 'An account with this email already exists'
-                })
-            
             # Create user
+            username = email  # Use email as username
             user = User.objects.create_user(
-                username=email,
+                username=username,
                 email=email,
                 password=password,
                 first_name=first_name,
                 last_name=last_name
             )
             
-            # Profile is auto-created via signals
+            # Create profile
+            UserProfile.objects.create(user=user)
             
             # Log in the user
             login(request, user)
@@ -306,9 +274,6 @@ def api_signup(request):
             return JsonResponse({
                 'success': False,
                 'message': f'Error creating account: {str(e)}'
-            }, status=500)
+            })
     
-    return JsonResponse({
-        'success': False,
-        'message': 'Invalid request method'
-    }, status=405)
+    return JsonResponse({'success': False, 'message': 'Invalid request method'})

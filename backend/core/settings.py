@@ -16,6 +16,9 @@ Django settings for core project.
 """
 from pathlib import Path
 from decouple import config
+from dotenv import load_dotenv
+load_dotenv()
+import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -26,6 +29,8 @@ GEMINI_API_KEY = config('GEMINI_API_KEY', default='')
 SECRET_KEY = 'django-insecure--abxfx8ir9e_%&uf%-n5@1mz1o*u1$&^8bkc-$&-&6lce-$&4j'
 DEBUG = True
 ALLOWED_HOSTS = ['*']
+
+ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY', '')
 
 INSTALLED_APPS = [
     'django.contrib.admin',

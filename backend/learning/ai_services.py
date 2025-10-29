@@ -68,7 +68,7 @@ class HuggingFaceAIService:
                     model="google/flan-t5-small"
                 )
                 
-                logger.info("✅ Hugging Face pipelines initialized successfully")
+                logger.info("Hugging Face pipelines initialized successfully")
             except Exception as e:
                 logger.error(f"⚠️ Error initializing pipelines: {e}")
                 self.classifier = None

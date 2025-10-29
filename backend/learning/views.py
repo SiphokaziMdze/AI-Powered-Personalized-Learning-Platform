@@ -125,7 +125,7 @@ def get_course_data(user, course):
     if not current_progress and total_lessons > 0:
         current_progress = course_progress.order_by('-last_accessed').first()
     
-    current_lesson = current_progress.lesson if current_progress else course.lessons.first()
+    current_lesson = current_progress.lesson if current_progress else (course.lessons.first() if total_lessons > 0 else None)
     
     # Quizzes with user attempt data
     quizzes = []

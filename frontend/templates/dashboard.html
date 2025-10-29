@@ -417,8 +417,12 @@
               </div>
               <p>{{ os2_current_lesson.content|truncatewords:20|default:"Learn about virtual memory, paging, and segmentation techniques." }}</p>
               <div class="topic-actions" style="display:flex; gap:8px; flex-wrap:wrap;">
-                <a class="btn-primary" href="{% url 'learning:lesson_detail' os2_current_lesson.id %}">Continue Reading</a>
-                <a class="btn-secondary" href="/learning/games/">Practice with Games</a>
+                {% if os2_current_lesson %}
+                    <a class="btn-primary" href="{% url 'learning:lesson_detail' os2_current_lesson.id %}">Continue Reading</a>
+                {% else %}
+                    <a class="btn-primary" href="{% url 'learning:course_list' %}">Start Learning</a>
+                {% endif %}
+                                <a class="btn-secondary" href="/learning/games/">Practice with Games</a>
               </div>
             </div>
           </div>
@@ -555,7 +559,11 @@
               </div>
               <p>{{ db3_current_lesson.content|truncatewords:20|default:"Learn advanced query optimization techniques and indexing strategies." }}</p>
               <div class="topic-actions" style="display:flex; gap:8px; flex-wrap:wrap;">
-                <a class="btn-primary" href="{% url 'learning:lesson_detail' db3_current_lesson.id %}">Continue Reading</a>
+                {% if db3_current_lesson %}
+                    <a class="btn-primary" href="{% url 'learning:lesson_detail' db3_current_lesson.id %}">Continue Reading</a>
+                {% else %}
+                    <a class="btn-primary" href="{% url 'learning:course_list' %}">Start Learning</a>
+                {% endif %}
                 <a class="btn-secondary" href="/learning/games/">Practice SQL</a>
               </div>
             </div>

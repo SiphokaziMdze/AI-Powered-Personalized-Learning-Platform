@@ -35,10 +35,12 @@ class Lesson(models.Model):
     is_published = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
+    difficulty = models.CharField(max_length=50, default='Beginner')
+    estimated_time_minutes = models.PositiveIntegerField(default=15)
+
     def __str__(self):
         return f"{self.course.title} - {self.title}"
-    
+
     class Meta:
         ordering = ['course', 'order']
         unique_together = ['course', 'order']

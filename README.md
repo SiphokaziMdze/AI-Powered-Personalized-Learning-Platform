@@ -1,6 +1,6 @@
 # AI-Powered Personalized Learning Platform 🤖📚
 
-An AI-powered learning platform developed as my **BEngTech Computer Engineering final-year project** for **Industrial Design Project 3**.
+An AI-powered learning platform developed as my **BEngTech Computer Engineering final-year project** for the module **Industrial Design Project 3**.
 
 The platform was designed to make online learning more personalised by using AI to analyse learning content and student performance, generate learning material, and provide adaptive recommendations.
 
@@ -103,7 +103,7 @@ It also strengthened my understanding of how AI can be integrated into a softwar
 ## 👩🏽‍💻 About the Project
 
 **Qualification:** BEngTech in Computer Engineering  
-**Project:** Industrial Design Project 3  
+**Module:** Industrial Design Project 3  
 **Project Type:** Final-Year Project
 
 Built by **Siphokazi Veronica Mdze**.
